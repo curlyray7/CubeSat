@@ -25,7 +25,7 @@ def check_db_status():
     try:
         # Tentative de connexion à MySQL
         connection = pymysql.connect(
-            host="cubesat-db",
+            host="CubeSat-db",
             user="root",
             password="password",
             database="nanoOrbit_db"  # <-- METTRE LE NOUVEAU NOM ICI
