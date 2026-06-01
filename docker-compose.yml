@@ -1,0 +1,29 @@
+services:
+  # 1. Votre base de données MySQL
+  cubesat-db:
+    image: mysql:latest
+    container_name: CubeSat_DB
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: cubesat_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./sql-init:/docker-entrypoint-initdb.d
+
+  # 2. Votre serveur FastAPI
+  cubesat-backend:
+    build: .
+    container_name: CubeSat_FastAPI
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=mysql+pymysql://root:password@cubesat-db:3306/cubesat_db
+    depends_on:
+      - cubesat-db
+
+volumes:
+  mysql_data:
