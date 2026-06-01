@@ -28,10 +28,10 @@ def check_db_status():
             host="cubesat-db",
             user="root",
             password="password",
-            database="cubesat_db"
+            database="nanoOrbit_db"  # <-- METTRE LE NOUVEAU NOM ICI
         )
         connection.close()
-        return {"status": "success", "message": "FastAPI est connecté à la base de données MySQL !"}
+        return {"status": "success", "message": "FastAPI est connecté à la base de données nanoOrbit_db !"}
     except Exception as e:
         return {"status": "error", "message": f"Échec de connexion à la BDD : {str(e)}"}
 
