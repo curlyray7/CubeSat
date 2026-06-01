@@ -2,15 +2,257 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>CubeSat Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NanoOrbit — CubeSat Earth Observation System</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <h1>🛰️ Projet CubeSat - Test Serveur</h1>
-  <p>Le Front-end Vanilla fonctionne !</p>
 
-  <div id="db-status">Connexion à l'API en cours...</div>
 
-</body>
+<!-- ══════════════════════════════════════════
+     LOGIN PAGE
+     ══════════════════════════════════════════ -->
+<div id="login-page" class="page">
+  <div class="login-card glass">
+    <div class="login-logo">
+      <div class="orbit-icon">🛰️</div>
+      <h1>NanoOrbit</h1>
+    </div>
+    <p class="login-tagline">CubeSat Earth Observation System</p>
+
+    <div class="form-group">
+      <label for="login-user">Identifiant</label>
+      <input type="text" id="login-user" placeholder="ex : analyste_data" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label for="login-pass">Mot de passe</label>
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+
+    <button class="btn-primary" onclick="handleLogin()">
+      Connexion au système
+    </button>
+
+    <div id="login-error" class="login-error hidden"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     APPLICATION (post-login)
+     ══════════════════════════════════════════ -->
+<div id="app-page" class="page hidden">
+
+  <!-- Top Navigation -->
+  <nav class="topnav">
+    <a class="topnav-brand" href="#">
+      <div class="brand-dot"></div>
+      NanoOrbit
+    </a>
+
+    <div class="nav-tabs" id="nav-tabs">
+      <!-- Front-office tabs -->
+      <button class="nav-tab active" onclick="showScreen('fo-satellites', this)">🛰️ Satellites</button>
+      <button class="nav-tab" onclick="showScreen('fo-communications', this)">📡 Communications</button>
+      <button class="nav-tab" onclick="showScreen('fo-missions', this)">🚀 Missions</button>
+      <button class="nav-tab" onclick="showScreen('fo-alertes', this)">⚠️ Alertes</button>
+      <!-- Back-office tabs (shown conditionally) -->
+      <button class="nav-tab back-tab hidden" id="tab-bo-statut" onclick="showScreen('bo-statut', this)">✏️ Statut satellite</button>
+      <button class="nav-tab back-tab hidden" id="tab-bo-fenetre" onclick="showScreen('bo-fenetre', this)">📅 Fenêtre comm.</button>
+      <button class="nav-tab back-tab hidden" id="tab-bo-mission" onclick="showScreen('bo-mission', this)">🔗 Assignation</button>
+      <button class="nav-tab back-tab hidden" id="tab-bo-desorbiter" onclick="showScreen('bo-desorbiter', this)">💥 Désorbiter</button>
+    </div>
+
+    <div class="topnav-right">
+      <div class="user-badge">
+        <span id="nav-username">—</span>
+        <span class="user-role" id="nav-role-badge">—</span>
+      </div>
+      <button class="btn-logout" onclick="handleLogout()">Déconnexion</button>
+    </div>
+  </nav>
+
+  <!-- Screens -->
+  <main class="app-content">
+
+    <!-- ── FO-01 : Satellites opérationnels ──────────────── -->
+    <div class="screen active" id="screen-fo-satellites">
+      <div class="section-header">
+        <div>
+          <div class="section-title"><span class="icon">🛰️</span> Satellites Opérationnels</div>
+          <div class="section-sub">Source : VUE_SATELLITES_OPERATIONNELS</div>
+        </div>
+        <div class="stat-chips" id="chips-satellites"></div>
+      </div>
+      <div class="table-wrapper glass">
+        <table>
+          <thead>
+            <tr>
+              <th>Référence</th>
+              <th>Nom</th>
+              <th>Format</th>
+              <th>Lancement</th>
+              <th>Orbite</th>
+              <th>Altitude (km)</th>
+              <th>Batterie (Wh)</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody id="tb-satellites">
+            <tr class="loading-row"><td colspan="8"><span class="spinner"></span> Chargement des données…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── FO-02 : Bilan communications ──────────────────── -->
+    <div class="screen" id="screen-fo-communications">
+      <div class="section-header">
+        <div>
+          <div class="section-title"><span class="icon">📡</span> Bilan des Communications</div>
+          <div class="section-sub">Source : VUE_BILAN_COMMUNICATIONS</div>
+        </div>
+      </div>
+      <div class="table-wrapper glass">
+        <table>
+          <thead>
+            <tr>
+              <th>Satellite</th>
+              <th>Fenêtres réalisées</th>
+              <th>Volume total (Mo)</th>
+              <th>Moy./fenêtre (Mo)</th>
+              <th>Dernière comm.</th>
+              <th>Stations distinctes</th>
+            </tr>
+          </thead>
+          <tbody id="tb-communications">
+            <tr class="loading-row"><td colspan="6"><span class="spinner"></span> Chargement des données…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── FO-03 : Tableau de bord missions ──────────────── -->
+    <div class="screen" id="screen-fo-missions">
+      <div class="section-header">
+        <div>
+          <div class="section-title"><span class="icon">🚀</span> Tableau de Bord Missions</div>
+          <div class="section-sub">Source : VUE_TABLEAU_DE_BORD_MISSIONS</div>
+        </div>
+        <div id="chips-missions" class="stat-chips"></div>
+      </div>
+      <div class="table-wrapper glass">
+        <table>
+          <thead>
+            <tr>
+              <th>ID Mission</th>
+              <th>Nom</th>
+              <th>Zone géographique</th>
+              <th>Début</th>
+              <th>Participants</th>
+              <th>Opérationnels</th>
+              <th>État</th>
+            </tr>
+          </thead>
+          <tbody id="tb-missions">
+            <tr class="loading-row"><td colspan="7"><span class="spinner"></span> Chargement des données…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── FO-04 : Alertes instruments ───────────────────── -->
+    <div class="screen" id="screen-fo-alertes">
+      <div class="section-header">
+        <div>
+          <div class="section-title"><span class="icon">⚠️</span> Alertes Instruments</div>
+          <div class="section-sub">Source : VUE_ALERTES_INSTRUMENTS</div>
+        </div>
+        <div id="alert-counter" class="alert-counter hidden">
+          🔴 <span id="alert-count">0</span> alerte(s) critique(s)
+        </div>
+      </div>
+      <div class="table-wrapper glass">
+        <table>
+          <thead>
+            <tr>
+              <th>Priorité</th>
+              <th>Instrument</th>
+              <th>Type</th>
+              <th>État</th>
+              <th>Satellite</th>
+            </tr>
+          </thead>
+          <tbody id="tb-alertes">
+            <tr class="loading-row"><td colspan="5"><span class="spinner"></span> Chargement des données…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── BO-01 : Modifier statut satellite ─────────────── -->
+    <div class="screen" id="screen-bo-statut">
+      <div class="section-header">
+        <div>
+          <div class="section-title"><span class="icon">✏️</span> Modifier le Statut d'un Satellite</div>
+          <div class="section-sub">Profils : operateur_sat, admin_nano</div>
+        </div>
+      </div>
+      <div id="bo-statut-content">
+        <!-- injected dynamically based on role -->
+      </div>
+    </div>
+
+    <!-- ── BO-02 : Planifier fenêtre de communication ──────  -->
+    <div class="screen" id="screen-bo-fenetre">
+      <div class="section-header">
+        <div>
+          <div class="section-title"><span class="icon">📅</span> Planifier une Fenêtre de Communication</div>
+          <div class="section-sub">Profils : operateur_sat, admin_nano</div>
+        </div>
+      </div>
+      <div id="bo-fenetre-content"></div>
+    </div>
+
+    <!-- ── BO-03 : Assigner satellite à mission ───────────── -->
+    <div class="screen" id="screen-bo-mission">
+      <div class="section-header">
+        <div>
+          <div class="section-title"><span class="icon">🔗</span> Assigner un Satellite à une Mission</div>
+          <div class="section-sub">Profils : resp_mission, admin_nano</div>
+        </div>
+      </div>
+      <div id="bo-mission-content"></div>
+    </div>
+
+    <!-- ── BO-04 : Désorbiter un satellite ───────────────── -->
+    <div class="screen" id="screen-bo-desorbiter">
+      <div class="section-header">
+        <div>
+          <div class="section-title"><span class="icon">💥</span> Désorbiter un Satellite</div>
+          <div class="section-sub">Profil exclusif : admin_nano</div>
+        </div>
+      </div>
+      <div id="bo-desorbiter-content"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CONFIRMATION MODAL
+     ══════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="confirm-modal">
+  <div class="modal glass">
+    <h3 id="modal-title">Êtes-vous sûr ?</h3>
+    <p id="modal-body">Cette action est irréversible.</p>
+    <div class="modal-btns">
+      <button class="btn-action btn-red" id="modal-confirm">Confirmer</button>
+      <button class="btn-action" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);"
+              onclick="closeModal()">Annuler</button>
+    </div>
+  </div>
+</div>
 
 <script src="/static/app.js" defer></script>
+</body>
 </html>
