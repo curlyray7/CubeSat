@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NanoOrbit — CubeSat Earth Observation System</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛰️</text></svg>">
 
   <!-- ── Styles ───────────────────────────────────────────── -->
   <link rel="stylesheet" href="/static/css/base.css">
@@ -12,7 +13,8 @@
   <link rel="stylesheet" href="/static/css/components.css">
   <link rel="stylesheet" href="/static/css/globe.css">
 
-  <!-- ── Globe.gl (Three.js embarqué) ─────────────────────── -->
+  <!-- ── Three.js (login scene) + Globe.gl (app globe) ──────── -->
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
   <script src="https://unpkg.com/globe.gl@2.30.0/dist/globe.gl.min.js"></script>
 </head>
 <body>
@@ -21,23 +23,29 @@
      PAGE LOGIN
      ══════════════════════════════════════════ -->
 <div id="login-page" class="page">
-  <div class="login-card glass">
+  <canvas id="login-canvas"></canvas>
+  <div class="login-card login-card--hud">
+
     <div class="login-logo">
       <div class="orbit-icon">🛰️</div>
       <h1>NanoOrbit</h1>
     </div>
     <p class="login-tagline">CubeSat Earth Observation System</p>
 
+    <div class="login-divider"></div>
+
     <div class="form-group">
       <label for="login-user">Identifiant</label>
-      <input type="text" id="login-user" placeholder="ex : analyste_data" autocomplete="username">
+      <input type="text" id="login-user" placeholder="ex : analyste_data" autocomplete="username" spellcheck="false">
     </div>
     <div class="form-group">
       <label for="login-pass">Mot de passe</label>
       <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
     </div>
-    <button class="btn-primary" onclick="handleLogin()">Connexion au système</button>
+
+    <button class="btn-primary" onclick="handleLogin()">Se connecter</button>
     <div id="login-error" class="login-error hidden"></div>
+
   </div>
 </div>
 
@@ -49,7 +57,7 @@
   <!-- Top Navigation -->
   <nav class="topnav">
     <button class="topnav-brand" onclick="showScreen('globe', document.getElementById('tab-globe'))">
-      <img src="/static/assets/Logo_NanoOrbit.png" alt="Logo">
+      <!--<img src="/static/assets/Logo_NanoOrbit.png" alt="Logo">!-->
     </button>
 
     <div class="nav-tabs">
@@ -72,7 +80,6 @@
       <button class="btn-logout" onclick="handleLogout()">Déconnexion</button>
     </div>
   </nav>
-
   <!-- ── Globe (page d'accueil) ───────────────────────────── -->
   <div class="screen active" id="screen-globe">
     <div id="globe-container"></div>
@@ -231,6 +238,7 @@
 </div>
 
 <!-- ── Scripts (ordre de chargement important) ─────────────── -->
+<script src="/static/js/login-scene.js"></script>
 <script src="/static/js/utils.js"></script>
 <script src="/static/js/auth.js"></script>
 <script src="/static/js/nav.js"></script>

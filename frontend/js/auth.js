@@ -51,6 +51,8 @@ function handleLogin() {
   }
 
   SESSION = { user: username, role: USERS[username].role };
+  // Arrêter la scène Three.js du login pour libérer le GPU
+  if (window.loginScene) window.loginScene.stop();
   hideEl('login-page');
   showEl('app-page');
   initApp();
