@@ -1,0 +1,130 @@
+/* ============================================================
+   layout.css — Navbar, structure de l'app, screens
+   ============================================================ */
+
+/* ── App shell ───────────────────────────────────────────── */
+#app-page { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ── Top Navigation ──────────────────────────────────────── */
+.topnav {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center;
+  padding: 0 24px;
+  height: 60px;
+  background: rgba(6,13,26,0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(56,189,248,0.12);
+}
+
+.topnav-brand {
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--white);
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-right: 32px;
+  white-space: nowrap;
+}
+
+.brand-dot {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, var(--atmo-300), var(--atmo-glow) 60%, var(--earth-blue));
+  box-shadow: 0 0 12px rgba(14,165,233,0.5);
+  flex-shrink: 0;
+}
+
+.nav-tabs { display: flex; gap: 4px; flex: 1; }
+
+.nav-tab {
+  padding: 6px 16px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: color 0.2s, background 0.2s;
+  white-space: nowrap;
+}
+.nav-tab:hover  { color: var(--white); background: rgba(255,255,255,0.05); }
+.nav-tab.active { color: var(--atmo-400); background: rgba(14,165,233,0.1); border: 1px solid rgba(14,165,233,0.2); }
+
+.nav-tab.back-tab { color: var(--amber-sat); }
+.nav-tab.back-tab:hover  { background: rgba(245,158,11,0.08); }
+.nav-tab.back-tab.active { color: var(--amber-sat); background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.25); }
+
+.topnav-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+
+.user-badge {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  font-size: 0.8rem;
+}
+
+.user-role {
+  font-size: 0.7rem;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.role-analyste    { background: rgba(56,189,248,0.15); color: var(--atmo-400);  }
+.role-operateur   { background: rgba(34,197,94,0.15);  color: var(--green-sat); }
+.role-responsable { background: rgba(245,158,11,0.15); color: var(--amber-sat); }
+.role-admin       { background: rgba(239,68,68,0.15);  color: #f87171;          }
+
+.btn-logout {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-logout:hover { border-color: rgba(239,68,68,0.4); color: #f87171; background: rgba(239,68,68,0.06); }
+
+/* ── Screens ─────────────────────────────────────────────── */
+.screen { display: none; animation: fadeIn 0.3s ease; }
+.screen.active { display: block; }
+#screen-globe.active { display: block; width: 100%; height: calc(100vh - 60px); }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Data content wrapper ────────────────────────────────── */
+#app-data-content { padding: 28px; }
+#app-data-content .screen.active { display: block; animation: fadeIn 0.3s ease; }
+
+/* ── Section header ──────────────────────────────────────── */
+.section-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+}
+.section-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.25rem; font-weight: 600; color: var(--white);
+  display: flex; align-items: center; gap: 10px;
+}
+.section-title .icon { font-size: 1.1em; filter: drop-shadow(0 0 6px currentColor); }
+.section-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .topnav       { padding: 0 12px; }
+  .nav-tabs     { gap: 2px; }
+  .nav-tab      { padding: 5px 10px; font-size: 0.78rem; }
+  #app-data-content { padding: 16px; }
+}
