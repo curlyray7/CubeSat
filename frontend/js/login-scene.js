@@ -21,8 +21,8 @@
 
   const scene  = new T.Scene();
   const camera = new T.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 2000);
-  camera.position.set(-6, 3, 22);
-  camera.lookAt(-1, 0, 0);
+  camera.position.set(0, 3, 22);
+  camera.lookAt(-5, 0, 0); // Terre cadrée à gauche de l'écran
 
   // ── Lighting ──────────────────────────────────────────────
   scene.add(new T.AmbientLight(0x08080f, 1.0));
@@ -194,10 +194,10 @@
     uEarth.uTime.value = time;
 
     camAngle += 0.00018;
-    camera.position.x = -1 + Math.sin(camAngle) * CAM_R;
+    camera.position.x = Math.sin(camAngle) * CAM_R;
     camera.position.z = Math.cos(camAngle) * CAM_R;
     camera.position.y = CAM_Y + Math.sin(time * 0.07) * 0.4;
-    camera.lookAt(-1, 0, 0);
+    camera.lookAt(-5, 0, 0);
 
     satellites.forEach(sd => {
       sd.angle += sd.speed;
