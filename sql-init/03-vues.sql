@@ -1,0 +1,60 @@
+CREATE OR REPLACE VIEW VUE_SATELLITES_OPERATIONNELS AS
+SELECT s.ref_satellite,
+       s.nom_satellite,
+       s.format_cubesat,
+       s.statut,
+       o.type_orbite,
+       o.altitude,
+       s.capacite_batterie
+FROM SATELLITE s
+         JOIN
+     ORBITE o ON s.fk_id_orbite = o.id_orbite
+WHERE s.statut = 'Opérationnel';
+
+
+
+CREATE OR REPLACE VIEW VUE_BILAN_COMMUNICATIONS AS
+SELECT f.fk_id_satellite,
+       COUNT(id_fenetre)                 AS nb_fenetres_realisees,
+       SUM(volume_donnees)               AS volume_total_mo,
+       AVG(volume_donnees)               AS volume_moyen_mo,
+       MAX(f.datetime_debut)             AS date_derniere_communication,
+       COUNT(DISTINCT f.fk_code_station) AS nb_stations_contactees
+FROM FENETRE_COM f
+WHERE f.statut = 'Réalisée'
+GROUP BY f.fk_id_satellite;
+
+
+
+CREATE OR REPLACE VIEW VUE_TABLEAU_DE_BORD_MISSIONS AS
+SELECT m.id_mission,
+       m.nom_mission,
+       m.zone_geo_cible,
+       m.date_debut,
+       COUNT(p.id_satellite)                                      AS nb_satellites_participants,
+       SUM(CASE WHEN s.statut = 'Opérationnel' THEN 1 ELSE 0 END) AS nb_satellites_operationnels
+FROM MISSION m
+         LEFT JOIN
+     PARTICIPATION p ON m.id_mission = p.id_mission
+         LEFT JOIN
+     SATELLITE s ON p.id_satellite = s.ref_satellite
+WHERE m.statut_mission = 'Active'
+GROUP BY m.id_mission,
+         m.nom_mission,
+         m.zone_geo_cible,
+         m.date_debut;
+
+
+CREATE OR REPLACE VIEW VUE_ALERTES_INSTRUMENTS AS
+SELECT i.ref_instrument,
+       i.type_instrument,
+       e.etat_fonctionnement,
+       e.id_satellite,
+       CASE
+           WHEN e.etat_fonctionnement = 'Hors service' THEN 'CRITIQUE'
+           WHEN e.etat_fonctionnement = 'Dégradé' THEN 'SURVEILLANCE'
+           END AS priorite
+FROM INSTRUMENT i
+         JOIN
+     EMBARQUEMENT e ON i.ref_instrument = e.ref_instrument
+WHERE e.etat_fonctionnement IN ('Dégradé', 'Hors service');
