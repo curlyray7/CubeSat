@@ -56,6 +56,9 @@ async function loadSatellites() {
 }
 
 /* ── FO-02 : Bilan des communications ────────────────────── */
+// Colonnes réelles de VUE_BILAN_COMMUNICATIONS :
+//   fk_id_satellite, nb_fenetres_realisees, volume_total_mo,
+//   volume_moyen_mo, date_derniere_communication, nb_stations_contactees
 async function loadCommunications() {
   try {
     const { data = [] } = await fetch('/api/communications').then(r => r.json());
@@ -67,19 +70,28 @@ async function loadCommunications() {
       return;
     }
 
-    const maxVol = Math.max(...data.map(r => parseFloat(r.volume_total) || 0));
+    const maxVol = Math.max(...data.map(r => parseFloat(r.volume_total_mo) || 0));
 
     data.forEach(row => {
       const tr    = el('tr');
-      const isTop = (parseFloat(row.volume_total) || 0) === maxVol && maxVol > 0;
+      const vol   = parseFloat(row.volume_total_mo) || 0;
+      const isTop = vol === maxVol && maxVol > 0;
       if (isTop) tr.classList.add('top-active');
+
+      const sat      = row.nom_satellite || row.fk_id_satellite || '—';
+      const nbFen    = row.nb_fenetres_realisees ?? 0;
+      const volTot   = row.volume_total_mo   != null ? Number(row.volume_total_mo).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) : '—';
+      const volMoy   = row.volume_moyen_mo   != null ? Number(row.volume_moyen_mo).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) : '—';
+      const derComm  = row.date_derniere_communication ? String(row.date_derniere_communication).slice(0, 16).replace('T', ' ') : '—';
+      const nbSta    = row.nb_stations_contactees ?? '—';
+
       tr.innerHTML = `
-        <td><strong>${row.nom_satellite || '—'}</strong>${isTop ? ' <span style="color:var(--atmo-400);font-size:0.75rem">★ Top</span>' : ''}</td>
-        <td class="num">${row.nb_fenetres ?? 0}</td>
-        <td class="num">${row.volume_total != null ? Number(row.volume_total).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) : '—'}</td>
-        <td class="num">${row.volume_moyen != null ? Number(row.volume_moyen).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) : '—'}</td>
-        <td>${row.derniere_comm ? String(row.derniere_comm).slice(0, 16).replace('T', ' ') : '—'}</td>
-        <td class="num">${row.nb_stations ?? '—'}</td>`;
+        <td><strong>${sat}</strong>${isTop ? ' <span style="color:var(--atmo-400);font-size:0.75rem">★ Top</span>' : ''}</td>
+        <td class="num">${nbFen}</td>
+        <td class="num">${volTot}</td>
+        <td class="num">${volMoy}</td>
+        <td>${derComm}</td>
+        <td class="num">${nbSta}</td>`;
       tb.appendChild(tr);
     });
   } catch (e) {
@@ -100,14 +112,17 @@ async function loadMissions() {
       return;
     }
 
-    const sousDotees = data.filter(m => (parseInt(m.nb_operationnels) || 0) < (parseInt(m.nb_participants) || 0)).length;
+    // Colonnes réelles : nb_satellites_participants, nb_satellites_operationnels
+    const sousDotees = data.filter(m =>
+      (parseInt(m.nb_satellites_operationnels) || 0) < (parseInt(m.nb_satellites_participants) || 0)
+    ).length;
     chips.innerHTML = `<div class="chip chip-blue"><span class="chip-value">${data.length}</span> missions actives</div>`
       + (sousDotees > 0 ? `<div class="chip chip-red"><span class="chip-value">${sousDotees}</span> sous-dotée(s)</div>` : '');
 
     data.forEach(m => {
       const tr     = el('tr');
-      const nb_op  = parseInt(m.nb_operationnels) || 0;
-      const nb_par = parseInt(m.nb_participants)  || 0;
+      const nb_op  = parseInt(m.nb_satellites_operationnels) || 0;
+      const nb_par = parseInt(m.nb_satellites_participants)  || 0;
       if (nb_op < nb_par) tr.classList.add('mission-understaffed');
       tr.innerHTML = `
         <td><code style="color:var(--atmo-300);font-size:0.85rem">${m.id_mission || '—'}</code></td>
@@ -153,7 +168,7 @@ async function loadAlertes() {
         <td><strong>${a.ref_instrument || a.nom_instrument || '—'}</strong></td>
         <td>${a.type_instrument || '—'}</td>
         <td style="color:${prio === 'CRITIQUE' ? '#f87171' : 'var(--amber-sat)'}">${a.etat_fonctionnement || '—'}</td>
-        <td>${a.nom_satellite || '—'}</td>`;
+        <td>${a.nom_satellite || a.id_satellite || '—'}</td>`;
       tb.appendChild(tr);
     });
   } catch (e) {

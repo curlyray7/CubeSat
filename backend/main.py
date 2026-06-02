@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional  # noqa: F401 — utilisé dans les Pydantic models
 import pymysql
 import pymysql.cursors
 import os
@@ -120,7 +120,7 @@ def get_communications():
         conn = get_conn()
         rows = try_view(
             conn,
-            "SELECT * FROM VUE_BILAN_COMMUNICATIONS ORDER BY volume_total DESC",
+            "SELECT * FROM VUE_BILAN_COMMUNICATIONS ORDER BY volume_total_mo DESC",
             """
             SELECT
                 s.nom_satellite,
