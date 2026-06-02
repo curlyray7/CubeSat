@@ -8,3 +8,20 @@
 /dataSources.local.xml
 # Editor-based HTTP Client requests
 /httpRequests/
+
+# Fichiers système et IDE
+.idea/
+.DS_Store
+
+# Environnement virtuel Python
+.venv/
+venv/
+__pycache__/
+
+# Fichiers de configuration sensibles
+.env
+
+# Tes fichiers XML indésirables
+*.xml
+
+*.meta
