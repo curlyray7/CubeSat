@@ -1,4 +1,6 @@
-create database if not exists nanoOrbit_db character set utf8mb4;
+SET NAMES utf8mb4;
+SET character_set_client = utf8mb4;
+create database if not exists nanoOrbit_db character set utf8mb4 collate utf8mb4_unicode_ci;
 USE nanoOrbit_db;
 
 drop table if exists PARTICIPATION;

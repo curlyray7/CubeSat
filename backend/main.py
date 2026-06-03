@@ -32,6 +32,7 @@ def get_conn():
         user=os.getenv("DB_USER", "root"),
         password=os.getenv("DB_PASSWORD", "password"),
         database=os.getenv("DB_NAME", "nanoOrbit_db"),
+        charset="utf8mb4",
         cursorclass=pymysql.cursors.DictCursor,
     )
 
@@ -91,6 +92,38 @@ def get_satellites():
         )
         conn.close()
         return {"status": "success", "data": rows}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+# Globe — satellites + stations pour la carte 3D
+@app.get("/api/globe-data")
+def get_globe_data():
+    try:
+        conn = get_conn()
+        with conn.cursor() as cur:
+            # Satellites avec paramètres orbitaux réels
+            cur.execute("""
+                SELECT s.ref_satellite, s.nom_satellite, s.statut,
+                       o.inclinaison, o.altitude, o.periode_orbitale
+                FROM SATELLITE s
+                JOIN ORBITE o ON s.fk_id_orbite = o.id_orbite
+                WHERE s.statut != 'Désorbité'
+                ORDER BY s.ref_satellite
+            """)
+            satellites = [serialize(r) for r in cur.fetchall()]
+
+            # Stations au sol avec coordonnées réelles
+            cur.execute("""
+                SELECT code_station, nom_station, latitude, longitude,
+                       statut, bande_frequence, debit_max
+                FROM STATION_SOL
+                ORDER BY nom_station
+            """)
+            stations = [serialize(r) for r in cur.fetchall()]
+
+        conn.close()
+        return {"status": "success", "satellites": satellites, "stations": stations}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 

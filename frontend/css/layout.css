@@ -11,24 +11,11 @@
   display: flex; align-items: center;
   padding: 0 24px;
   height: 60px;
+  gap: 3em;
   background: rgba(6,13,26,0.85);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(56,189,248,0.12);
 }
-
-.topnav-brand {
-  display: flex; align-items: center; gap: 10px;
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: var(--white);
-  background: none;
-  border: none;
-  cursor: pointer;
-  margin-right: 32px;
-  white-space: nowrap;
-}
-
 .brand-dot {
   width: 26px; height: 26px;
   border-radius: 50%;
@@ -37,7 +24,11 @@
   flex-shrink: 0;
 }
 
-.nav-tabs { display: flex; gap: 4px; flex: 1; }
+.logo-nano {
+  width: 130px
+}
+
+.nav-tabs { display: flex; gap: 9px; flex: 1; }
 
 .nav-tab {
   padding: 6px 16px;

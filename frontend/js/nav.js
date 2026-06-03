@@ -32,7 +32,8 @@ function initApp() {
 
   // Démarrer sur le Globe
   showScreen('globe', $('tab-globe'));
-  initGlobe();
+  // Charger les données BDD avant d'initialiser le globe
+  loadGlobeData().then(() => initGlobe());
 }
 
 /* ── Navigation entre screens ────────────────────────────── */

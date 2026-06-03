@@ -3,20 +3,52 @@
    Terre 3D · Stations au sol · Satellites en orbite · Fly-to
    ============================================================ */
 
-/* ── Données orbitales (issues de la BDD) ─────────────────── */
-const SAT_ORBITS = {
-  'SAT-001': { inc: 97.4, alt: 550, period: 95.7,  phase:   0, color: '#38bdf8' },
-  'SAT-002': { inc: 97.4, alt: 550, period: 95.7,  phase: 130, color: '#38bdf8' },
-  'SAT-003': { inc: 51.6, alt: 400, period: 92.65, phase:  60, color: '#94a3b8' }, // En veille
-  'SAT-004': { inc: 97.8, alt: 600, period: 96.7,  phase: 240, color: '#38bdf8' },
-};
+/* ── Données chargées depuis la BDD ───────────────────────── */
+// Initialisées vides, peuplées par loadGlobeData() avant initGlobe()
+let SAT_ORBITS    = {};
+let STATIONS_DATA = [];
 
-/* ── Stations au sol (données réelles BDD) ────────────────── */
-const STATIONS_DATA = [
-  { id: 'GS-TLS-01', name: 'Toulouse-CNES',  lat: 43.605, lng:   1.444, statut: 'active',      bande: 'S-Band', debit: 100 },
-  { id: 'GS-KIR-01', name: 'Kiruna-SSC',      lat: 67.856, lng:  20.228, statut: 'active',      bande: 'X-Band', debit: 300 },
-  { id: 'GS-SGP-01', name: 'Singapore-SATEC', lat:  1.352, lng: 103.820, statut: 'maintenance', bande: 'S-Band', debit:  80 },
-];
+// Phase distribuée automatiquement pour éviter les superpositions
+function assignPhases(orbits) {
+  const refs = Object.keys(orbits);
+  refs.forEach((ref, i) => { orbits[ref].phase = (i / refs.length) * 360; });
+  return orbits;
+}
+
+async function loadGlobeData() {
+  try {
+    const json = await fetch('/api/globe-data').then(r => r.json());
+    if (json.status !== 'success') return;
+
+    // Satellites → SAT_ORBITS
+    const orbits = {};
+    json.satellites.forEach(s => {
+      orbits[s.ref_satellite] = {
+        inc:    parseFloat(s.inclinaison)      || 0,
+        alt:    parseFloat(s.altitude)         || 550,
+        period: parseFloat(s.periode_orbitale) || 95,
+        phase:  0,   // sera réparti par assignPhases
+        color:  s.statut === 'Opérationnel' ? '#38bdf8' : '#94a3b8',
+        nom:    s.nom_satellite,
+        statut: s.statut,
+      };
+    });
+    SAT_ORBITS = assignPhases(orbits);
+
+    // Stations → STATIONS_DATA
+    STATIONS_DATA = json.stations.map(st => ({
+      id:     st.code_station,
+      name:   st.nom_station,
+      lat:    parseFloat(st.latitude),
+      lng:    parseFloat(st.longitude),
+      statut: st.statut,          // 'active' ou 'maintenance'
+      bande:  st.bande_frequence,
+      debit:  parseFloat(st.debit_max),
+    }));
+  } catch (e) {
+    console.warn('loadGlobeData failed, globe will be empty:', e);
+  }
+}
 
 /* ── État interne ─────────────────────────────────────────── */
 let globeInstance = null;
@@ -204,7 +236,7 @@ function flyToStation(id) {
 /* ── Panneau d'info ───────────────────────────────────────── */
 function showGlobePanelSat(d) {
   const o      = d.orbit || SAT_ORBITS[d.ref];
-  const statut = d.color === '#94a3b8' ? 'En veille' : 'Opérationnel';
+  const statut = o?.statut || (d.color === '#94a3b8' ? 'En veille' : 'Opérationnel');
   $('globe-panel-content').innerHTML = `
     <div class="panel-type sat">Satellite</div>
     <div class="panel-name">🛰️ ${d.ref}</div>
@@ -253,8 +285,8 @@ function _buildSidebar() {
     <div class="sidebar-item" onclick="flyToSat('${ref}')">
       <span class="sidebar-dot" style="background:${o.color}"></span>
       <div class="sidebar-item-info">
-        <span class="sidebar-item-name">${ref}</span>
-        <span class="sidebar-item-sub">${o.color === '#94a3b8' ? 'En veille' : 'Opérationnel'} · ${o.alt} km</span>
+        <span class="sidebar-item-name">${o.nom || ref}</span>
+        <span class="sidebar-item-sub">${o.statut || 'Opérationnel'} · ${o.alt} km</span>
       </div>
       <span class="sidebar-item-arrow">→</span>
     </div>`).join('');
