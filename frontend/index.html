@@ -4,36 +4,48 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NanoOrbit — CubeSat Earth Observation System</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛰️</text></svg>">
+
+  <!-- ── Styles ───────────────────────────────────────────── -->
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/css/login.css">
+  <link rel="stylesheet" href="/static/css/layout.css">
+  <link rel="stylesheet" href="/static/css/components.css">
+  <link rel="stylesheet" href="/static/css/globe.css">
+
+  <!-- ── Three.js (login scene) + Globe.gl (app globe) ──────── -->
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/globe.gl@2.30.0/dist/globe.gl.min.js"></script>
 </head>
 <body>
 
-
 <!-- ══════════════════════════════════════════
-     LOGIN PAGE
+     PAGE LOGIN
      ══════════════════════════════════════════ -->
 <div id="login-page" class="page">
-  <div class="login-card glass">
+  <canvas id="login-canvas"></canvas>
+  <div class="login-card login-card--hud">
+
     <div class="login-logo">
       <div class="orbit-icon">🛰️</div>
       <h1>NanoOrbit</h1>
     </div>
     <p class="login-tagline">CubeSat Earth Observation System</p>
 
+    <div class="login-divider"></div>
+
     <div class="form-group">
       <label for="login-user">Identifiant</label>
-      <input type="text" id="login-user" placeholder="ex : analyste_data" autocomplete="username">
+      <input type="text" id="login-user" placeholder="ex : analyste_data" autocomplete="username" spellcheck="false">
     </div>
     <div class="form-group">
       <label for="login-pass">Mot de passe</label>
       <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
     </div>
 
-    <button class="btn-primary" onclick="handleLogin()">
-      Connexion au système
-    </button>
-
+    <button class="btn-primary" onclick="handleLogin()">Se connecter</button>
     <div id="login-error" class="login-error hidden"></div>
+
   </div>
 </div>
 
@@ -44,22 +56,18 @@
 
   <!-- Top Navigation -->
   <nav class="topnav">
-    <a class="topnav-brand" href="#">
-      <div class="brand-dot"></div>
-      NanoOrbit
-    </a>
+    <img class="logo-nano" src="/static/assets/Logo_NanoOrbit.png" alt="Logo">
 
-    <div class="nav-tabs" id="nav-tabs">
-      <!-- Front-office tabs -->
-      <button class="nav-tab active" onclick="showScreen('fo-satellites', this)">🛰️ Satellites</button>
-      <button class="nav-tab" onclick="showScreen('fo-communications', this)">📡 Communications</button>
-      <button class="nav-tab" onclick="showScreen('fo-missions', this)">🚀 Missions</button>
-      <button class="nav-tab" onclick="showScreen('fo-alertes', this)">⚠️ Alertes</button>
-      <!-- Back-office tabs (shown conditionally) -->
-      <button class="nav-tab back-tab hidden" id="tab-bo-statut" onclick="showScreen('bo-statut', this)">✏️ Statut satellite</button>
-      <button class="nav-tab back-tab hidden" id="tab-bo-fenetre" onclick="showScreen('bo-fenetre', this)">📅 Fenêtre comm.</button>
-      <button class="nav-tab back-tab hidden" id="tab-bo-mission" onclick="showScreen('bo-mission', this)">🔗 Assignation</button>
-      <button class="nav-tab back-tab hidden" id="tab-bo-desorbiter" onclick="showScreen('bo-desorbiter', this)">💥 Désorbiter</button>
+    <div class="nav-tabs">
+      <button class="nav-tab" id="tab-globe"         onclick="showScreen('globe',            this)">Globe</button>
+      <button class="nav-tab"                         onclick="showScreen('fo-satellites',    this)">Satellites</button>
+      <button class="nav-tab"                         onclick="showScreen('fo-communications',this)">Communications</button>
+      <button class="nav-tab"                         onclick="showScreen('fo-missions',      this)">Missions</button>
+      <button class="nav-tab"                         onclick="showScreen('fo-alertes',       this)">Alertes</button>
+      <button class="nav-tab back-tab hidden" id="tab-bo-statut"     onclick="showScreen('bo-statut',     this)">Statut</button>
+      <button class="nav-tab back-tab hidden" id="tab-bo-fenetre"    onclick="showScreen('bo-fenetre',    this)">Fenêtre</button>
+      <button class="nav-tab back-tab hidden" id="tab-bo-mission"    onclick="showScreen('bo-mission',    this)">Assignation</button>
+      <button class="nav-tab back-tab hidden" id="tab-bo-desorbiter" onclick="showScreen('bo-desorbiter', this)">Désorbiter</button>
     </div>
 
     <div class="topnav-right">
@@ -70,12 +78,49 @@
       <button class="btn-logout" onclick="handleLogout()">Déconnexion</button>
     </div>
   </nav>
+  <!-- ── Globe (page d'accueil) ───────────────────────────── -->
+  <div class="screen active" id="screen-globe">
+    <div id="globe-container"></div>
 
-  <!-- Screens -->
-  <main class="app-content">
+    <!-- Panneau gauche : stats + navigation + légende -->
+    <div class="globe-left-panel glass" id="globe-sidebar">
+      <div class="glp-header">
+        <span class="glp-title">🌍 NanoOrbit</span>
+        <button class="glp-toggle" onclick="toggleGlobeSidebar()">✕</button>
+      </div>
+      <div class="glp-stats">
+        <div class="glp-stat"><span class="glp-stat-val" id="gs-sats">—</span><span class="glp-stat-lbl">Satellites</span></div>
+        <div class="glp-stat-sep"></div>
+        <div class="glp-stat"><span class="glp-stat-val" id="gs-stations">—</span><span class="glp-stat-lbl">Stations</span></div>
+        <div class="glp-stat-sep"></div>
+        <div class="glp-stat"><span class="glp-stat-val" id="gs-missions">—</span><span class="glp-stat-lbl">Missions</span></div>
+      </div>
+      <div class="glp-divider"></div>
+      <div class="sidebar-body"></div>
+      <div class="glp-divider"></div>
+      <div class="glp-legend">
+        <div class="legend-item"><span class="legend-dot" style="background:#22c55e"></span>Station active</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span>Station maintenance</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#38bdf8"></span>Satellite opérationnel</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#94a3b8"></span>Satellite en veille</div>
+      </div>
+    </div>
 
-    <!-- ── FO-01 : Satellites opérationnels ──────────────── -->
-    <div class="screen active" id="screen-fo-satellites">
+    <!-- Bouton réouverture -->
+    <button class="sidebar-open-btn glass" id="sidebar-open-btn" onclick="toggleGlobeSidebar()" style="display:none">☰</button>
+
+    <!-- Panel info clic -->
+    <div class="globe-panel glass hidden" id="globe-panel">
+      <button class="globe-panel-close" onclick="closeGlobePanel()">✕</button>
+      <div id="globe-panel-content"></div>
+    </div>
+  </div>
+
+  <!-- ── Screens de données ────────────────────────────────── -->
+  <main id="app-data-content" style="display:none">
+
+    <!-- FO-01 : Satellites -->
+    <div class="screen" id="screen-fo-satellites">
       <div class="section-header">
         <div>
           <div class="section-title"><span class="icon">🛰️</span> Satellites Opérationnels</div>
@@ -85,53 +130,27 @@
       </div>
       <div class="table-wrapper glass">
         <table>
-          <thead>
-            <tr>
-              <th>Référence</th>
-              <th>Nom</th>
-              <th>Format</th>
-              <th>Lancement</th>
-              <th>Orbite</th>
-              <th>Altitude (km)</th>
-              <th>Batterie (Wh)</th>
-              <th>Statut</th>
-            </tr>
-          </thead>
-          <tbody id="tb-satellites">
-            <tr class="loading-row"><td colspan="8"><span class="spinner"></span> Chargement des données…</td></tr>
-          </tbody>
+          <thead><tr><th>Référence</th><th>Nom</th><th>Format</th><th>Lancement</th><th>Orbite</th><th>Altitude (km)</th><th>Batterie (Wh)</th><th>Statut</th></tr></thead>
+          <tbody id="tb-satellites"><tr class="loading-row"><td colspan="8"><span class="spinner"></span> Chargement…</td></tr></tbody>
         </table>
       </div>
     </div>
 
-    <!-- ── FO-02 : Bilan communications ──────────────────── -->
+    <!-- FO-02 : Communications -->
     <div class="screen" id="screen-fo-communications">
-      <div class="section-header">
-        <div>
-          <div class="section-title"><span class="icon">📡</span> Bilan des Communications</div>
-          <div class="section-sub">Source : VUE_BILAN_COMMUNICATIONS</div>
-        </div>
-      </div>
+      <div class="section-header"><div>
+        <div class="section-title"><span class="icon">📡</span> Bilan des Communications</div>
+        <div class="section-sub">Source : VUE_BILAN_COMMUNICATIONS</div>
+      </div></div>
       <div class="table-wrapper glass">
         <table>
-          <thead>
-            <tr>
-              <th>Satellite</th>
-              <th>Fenêtres réalisées</th>
-              <th>Volume total (Mo)</th>
-              <th>Moy./fenêtre (Mo)</th>
-              <th>Dernière comm.</th>
-              <th>Stations distinctes</th>
-            </tr>
-          </thead>
-          <tbody id="tb-communications">
-            <tr class="loading-row"><td colspan="6"><span class="spinner"></span> Chargement des données…</td></tr>
-          </tbody>
+          <thead><tr><th>Satellite</th><th>Fenêtres réalisées</th><th>Volume total (Mo)</th><th>Moy./fenêtre (Mo)</th><th>Dernière comm.</th><th>Stations distinctes</th></tr></thead>
+          <tbody id="tb-communications"><tr class="loading-row"><td colspan="6"><span class="spinner"></span> Chargement…</td></tr></tbody>
         </table>
       </div>
     </div>
 
-    <!-- ── FO-03 : Tableau de bord missions ──────────────── -->
+    <!-- FO-03 : Missions -->
     <div class="screen" id="screen-fo-missions">
       <div class="section-header">
         <div>
@@ -142,117 +161,88 @@
       </div>
       <div class="table-wrapper glass">
         <table>
-          <thead>
-            <tr>
-              <th>ID Mission</th>
-              <th>Nom</th>
-              <th>Zone géographique</th>
-              <th>Début</th>
-              <th>Participants</th>
-              <th>Opérationnels</th>
-              <th>État</th>
-            </tr>
-          </thead>
-          <tbody id="tb-missions">
-            <tr class="loading-row"><td colspan="7"><span class="spinner"></span> Chargement des données…</td></tr>
-          </tbody>
+          <thead><tr><th>ID Mission</th><th>Nom</th><th>Zone géographique</th><th>Début</th><th>Participants</th><th>Opérationnels</th><th>État</th></tr></thead>
+          <tbody id="tb-missions"><tr class="loading-row"><td colspan="7"><span class="spinner"></span> Chargement…</td></tr></tbody>
         </table>
       </div>
     </div>
 
-    <!-- ── FO-04 : Alertes instruments ───────────────────── -->
+    <!-- FO-04 : Alertes -->
     <div class="screen" id="screen-fo-alertes">
       <div class="section-header">
         <div>
           <div class="section-title"><span class="icon">⚠️</span> Alertes Instruments</div>
           <div class="section-sub">Source : VUE_ALERTES_INSTRUMENTS</div>
         </div>
-        <div id="alert-counter" class="alert-counter hidden">
-          🔴 <span id="alert-count">0</span> alerte(s) critique(s)
-        </div>
+        <div id="alert-counter" class="alert-counter hidden">🔴 <span id="alert-count">0</span> alerte(s) critique(s)</div>
       </div>
       <div class="table-wrapper glass">
         <table>
-          <thead>
-            <tr>
-              <th>Priorité</th>
-              <th>Instrument</th>
-              <th>Type</th>
-              <th>État</th>
-              <th>Satellite</th>
-            </tr>
-          </thead>
-          <tbody id="tb-alertes">
-            <tr class="loading-row"><td colspan="5"><span class="spinner"></span> Chargement des données…</td></tr>
-          </tbody>
+          <thead><tr><th>Priorité</th><th>Instrument</th><th>Type</th><th>État</th><th>Satellite</th></tr></thead>
+          <tbody id="tb-alertes"><tr class="loading-row"><td colspan="5"><span class="spinner"></span> Chargement…</td></tr></tbody>
         </table>
       </div>
     </div>
 
-    <!-- ── BO-01 : Modifier statut satellite ─────────────── -->
+    <!-- BO-01 : Statut satellite -->
     <div class="screen" id="screen-bo-statut">
-      <div class="section-header">
-        <div>
-          <div class="section-title"><span class="icon">✏️</span> Modifier le Statut d'un Satellite</div>
-          <div class="section-sub">Profils : operateur_sat, admin_nano</div>
-        </div>
-      </div>
-      <div id="bo-statut-content">
-        <!-- injected dynamically based on role -->
-      </div>
+      <div class="section-header"><div>
+        <div class="section-title"><span class="icon">✏️</span> Modifier le Statut d'un Satellite</div>
+        <div class="section-sub">Profils : operateur_sat, admin_nano</div>
+      </div></div>
+      <div id="bo-statut-content"></div>
     </div>
 
-    <!-- ── BO-02 : Planifier fenêtre de communication ──────  -->
+    <!-- BO-02 : Fenêtre de communication -->
     <div class="screen" id="screen-bo-fenetre">
-      <div class="section-header">
-        <div>
-          <div class="section-title"><span class="icon">📅</span> Planifier une Fenêtre de Communication</div>
-          <div class="section-sub">Profils : operateur_sat, admin_nano</div>
-        </div>
-      </div>
+      <div class="section-header"><div>
+        <div class="section-title"><span class="icon">📅</span> Planifier une Fenêtre de Communication</div>
+        <div class="section-sub">Profils : operateur_sat, admin_nano</div>
+      </div></div>
       <div id="bo-fenetre-content"></div>
     </div>
 
-    <!-- ── BO-03 : Assigner satellite à mission ───────────── -->
+    <!-- BO-03 : Assignation mission -->
     <div class="screen" id="screen-bo-mission">
-      <div class="section-header">
-        <div>
-          <div class="section-title"><span class="icon">🔗</span> Assigner un Satellite à une Mission</div>
-          <div class="section-sub">Profils : resp_mission, admin_nano</div>
-        </div>
-      </div>
+      <div class="section-header"><div>
+        <div class="section-title"><span class="icon">🔗</span> Assigner un Satellite à une Mission</div>
+        <div class="section-sub">Profils : resp_mission, admin_nano</div>
+      </div></div>
       <div id="bo-mission-content"></div>
     </div>
 
-    <!-- ── BO-04 : Désorbiter un satellite ───────────────── -->
+    <!-- BO-04 : Désorbiter -->
     <div class="screen" id="screen-bo-desorbiter">
-      <div class="section-header">
-        <div>
-          <div class="section-title"><span class="icon">💥</span> Désorbiter un Satellite</div>
-          <div class="section-sub">Profil exclusif : admin_nano</div>
-        </div>
-      </div>
+      <div class="section-header"><div>
+        <div class="section-title"><span class="icon">💥</span> Désorbiter un Satellite</div>
+        <div class="section-sub">Profil exclusif : admin_nano</div>
+      </div></div>
       <div id="bo-desorbiter-content"></div>
     </div>
 
   </main>
 </div>
 
-<!-- ══════════════════════════════════════════
-     CONFIRMATION MODAL
-     ══════════════════════════════════════════ -->
+<!-- Modal confirmation -->
 <div class="modal-overlay hidden" id="confirm-modal">
   <div class="modal glass">
     <h3 id="modal-title">Êtes-vous sûr ?</h3>
     <p id="modal-body">Cette action est irréversible.</p>
     <div class="modal-btns">
       <button class="btn-action btn-red" id="modal-confirm">Confirmer</button>
-      <button class="btn-action" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);"
-              onclick="closeModal()">Annuler</button>
+      <button class="btn-action" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1)" onclick="closeModal()">Annuler</button>
     </div>
   </div>
 </div>
 
-<script src="/static/app.js" defer></script>
+<!-- ── Scripts (ordre de chargement important) ─────────────── -->
+<script src="/static/js/login-scene.js"></script>
+<script src="/static/js/utils.js"></script>
+<script src="/static/js/auth.js"></script>
+<script src="/static/js/nav.js"></script>
+<script src="/static/js/globe.js"></script>
+<script src="/static/js/front-office.js"></script>
+<script src="/static/js/back-office.js"></script>
+
 </body>
 </html>

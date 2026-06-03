@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional  # noqa: F401 — utilisé dans les Pydantic models
 import pymysql
 import pymysql.cursors
 import os
@@ -32,6 +32,7 @@ def get_conn():
         user=os.getenv("DB_USER", "root"),
         password=os.getenv("DB_PASSWORD", "password"),
         database=os.getenv("DB_NAME", "nanoOrbit_db"),
+        charset="utf8mb4",
         cursorclass=pymysql.cursors.DictCursor,
     )
 
@@ -95,6 +96,38 @@ def get_satellites():
         return {"status": "error", "message": str(e)}
 
 
+# Globe — satellites + stations pour la carte 3D
+@app.get("/api/globe-data")
+def get_globe_data():
+    try:
+        conn = get_conn()
+        with conn.cursor() as cur:
+            # Satellites avec paramètres orbitaux réels
+            cur.execute("""
+                SELECT s.ref_satellite, s.nom_satellite, s.statut,
+                       o.inclinaison, o.altitude, o.periode_orbitale
+                FROM SATELLITE s
+                JOIN ORBITE o ON s.fk_id_orbite = o.id_orbite
+                WHERE s.statut != 'Désorbité'
+                ORDER BY s.ref_satellite
+            """)
+            satellites = [serialize(r) for r in cur.fetchall()]
+
+            # Stations au sol avec coordonnées réelles
+            cur.execute("""
+                SELECT code_station, nom_station, latitude, longitude,
+                       statut, bande_frequence, debit_max
+                FROM STATION_SOL
+                ORDER BY nom_station
+            """)
+            stations = [serialize(r) for r in cur.fetchall()]
+
+        conn.close()
+        return {"status": "success", "satellites": satellites, "stations": stations}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
 # Tous les satellites — pour les <select> du back-office
 @app.get("/api/satellites/all")
 def get_all_satellites():
@@ -120,7 +153,7 @@ def get_communications():
         conn = get_conn()
         rows = try_view(
             conn,
-            "SELECT * FROM VUE_BILAN_COMMUNICATIONS ORDER BY volume_total DESC",
+            "SELECT * FROM VUE_BILAN_COMMUNICATIONS ORDER BY volume_total_mo DESC",
             """
             SELECT
                 s.nom_satellite,

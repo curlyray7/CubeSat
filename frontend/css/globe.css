@@ -1,0 +1,176 @@
+/* ============================================================
+   globe.css — Globe 3D, panneau gauche, panels d'info,
+               marqueurs satellites
+   ============================================================ */
+
+/* ── Conteneur plein écran ───────────────────────────────── */
+#screen-globe {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 60px);
+  overflow: hidden;
+  background: #000;
+}
+
+#globe-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+#globe-container:active { cursor: grabbing; }
+#globe-container canvas { display: block; width: 100% !important; height: 100% !important; }
+
+/* ══════════════════════════════════════════════════════════
+   PANNEAU GAUCHE UNIFIÉ — Stats + Navigation + Légende
+   ══════════════════════════════════════════════════════════ */
+.globe-left-panel {
+  position: absolute;
+  top: 20px; left: 20px;
+  width: 268px;
+  max-height: calc(100% - 40px);
+  display: flex;
+  flex-direction: column;
+  z-index: 20;
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.3s;
+  overflow: hidden;
+}
+.globe-left-panel:not(.open) {
+  transform: translateX(calc(-100% - 24px));
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* En-tête */
+.glp-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px 12px; flex-shrink: 0;
+}
+.glp-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9rem; font-weight: 700; color: var(--white); letter-spacing: 0.02em;
+}
+.glp-toggle {
+  background: none; border: none; color: var(--text-muted);
+  font-size: 1rem; cursor: pointer;
+  width: 26px; height: 26px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  transition: color 0.2s, background 0.2s;
+}
+.glp-toggle:hover { color: var(--white); background: rgba(255,255,255,0.08); }
+
+/* Compteurs */
+.glp-stats {
+  display: flex; align-items: center; justify-content: space-around;
+  padding: 0 16px 14px; flex-shrink: 0;
+}
+.glp-stat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.glp-stat-val { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--atmo-400); line-height: 1; }
+.glp-stat-lbl { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.glp-stat-sep { width: 1px; height: 28px; background: rgba(56,189,248,0.15); }
+
+/* Diviseur */
+.glp-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(56,189,248,0.2), transparent); flex-shrink: 0; }
+
+/* Liste de navigation */
+.sidebar-body { overflow-y: auto; padding: 8px; flex: 1; min-height: 0; }
+.sidebar-body::-webkit-scrollbar { width: 3px; }
+.sidebar-body::-webkit-scrollbar-thumb { background: rgba(56,189,248,0.2); border-radius: 2px; }
+
+.sidebar-section-title {
+  font-size: 0.68rem; font-weight: 600; color: var(--text-dim);
+  letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 8px 4px;
+}
+
+.sidebar-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: var(--radius-md);
+  cursor: pointer; transition: background 0.15s, border-color 0.15s;
+  border: 1px solid transparent;
+}
+.sidebar-item:hover { background: rgba(56,189,248,0.08); border-color: rgba(56,189,248,0.18); }
+
+.sidebar-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 5px currentColor; }
+.sidebar-item-info { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+.sidebar-item-name { font-size: 0.82rem; font-weight: 600; color: var(--white); font-family: 'Space Grotesk', sans-serif; }
+.sidebar-item-sub  { font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sidebar-item-arrow { color: var(--atmo-400); font-size: 0.85rem; opacity: 0; transition: opacity 0.15s, transform 0.15s; }
+.sidebar-item:hover .sidebar-item-arrow { opacity: 1; transform: translateX(3px); }
+
+/* Légende en bas */
+.glp-legend { padding: 10px 14px 14px; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+.legend-item { display: flex; align-items: center; gap: 9px; font-size: 0.76rem; color: var(--text-muted); }
+.legend-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 4px currentColor; }
+
+/* Bouton réouverture */
+.sidebar-open-btn {
+  position: absolute; top: 20px; left: 20px;
+  padding: 8px 13px;
+  border: 1px solid rgba(56,189,248,0.25); border-radius: var(--radius-md);
+  color: var(--atmo-300); font-size: 1rem; font-weight: 600;
+  cursor: pointer; z-index: 20; transition: background 0.2s, transform 0.2s;
+}
+.sidebar-open-btn:hover { background: rgba(56,189,248,0.1); transform: scale(1.05); }
+
+/* ── Panel info (clic sur satellite/station) ─────────────── */
+.globe-panel {
+  position: absolute; top: 20px; right: 20px;
+  width: 300px; padding: 20px; z-index: 10;
+  transition: opacity 0.25s, transform 0.25s;
+}
+.globe-panel.hidden { opacity: 0; transform: translateX(20px); pointer-events: none; }
+
+.globe-panel-close {
+  position: absolute; top: 12px; right: 14px;
+  background: none; border: none; color: var(--text-muted);
+  font-size: 1rem; cursor: pointer; transition: color 0.2s;
+}
+.globe-panel-close:hover { color: var(--white); }
+
+.panel-type { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px; }
+.panel-type.sat     { color: var(--atmo-400);  }
+.panel-type.station { color: var(--green-sat); }
+
+.panel-name { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--white); margin-bottom: 14px; }
+.panel-rows { display: flex; flex-direction: column; gap: 7px; }
+.panel-row  { display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; }
+.panel-row .lbl { color: var(--text-muted); }
+.panel-row .val { color: var(--white); font-weight: 500; }
+.panel-divider  { height: 1px; background: rgba(56,189,248,0.12); margin: 12px 0; }
+
+.panel-action {
+  margin-top: 14px; width: 100%; padding: 9px;
+  border-radius: var(--radius-md);
+  background: rgba(14,165,233,0.15); border: 1px solid rgba(14,165,233,0.3);
+  color: var(--atmo-400); font-size: 0.82rem; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+}
+.panel-action:hover { background: rgba(14,165,233,0.25); transform: translateY(-1px); }
+
+/* ── Marqueurs satellites HTML ───────────────────────────── */
+.sat-marker {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  pointer-events: all;
+  transform: translate(-50%, -50%);
+  transition: transform 0.15s;
+}
+.sat-marker:hover { transform: translate(-50%, -50%) scale(1.3); }
+
+.sat-marker-icon {
+  font-size: 20px;
+  filter: drop-shadow(0 0 8px currentColor);
+  animation: sat-pulse 2s ease-in-out infinite alternate;
+}
+.sat-marker-label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 9px; font-weight: 600; color: #38bdf8;
+  background: rgba(6,13,26,0.75);
+  padding: 1px 5px; border-radius: 4px;
+  white-space: nowrap; letter-spacing: 0.05em;
+}
+
+@keyframes sat-pulse {
+  from { filter: drop-shadow(0 0 4px currentColor); }
+  to   { filter: drop-shadow(0 0 12px currentColor) brightness(1.3); }
+}
