@@ -141,6 +141,125 @@ async function loadMissions() {
   }
 }
 
+/* ── FO-05 : Historique des fenêtres de communication ───────
+   Accessible à tous les rôles — lecture seule.
+   Filtres : satellite (tous / ref_satellite) + statut
+   ─────────────────────────────────────────────────────────── */
+
+/** Peuple le <select> de filtre satellite (appel unique au chargement) */
+async function initFo5SatFilter() {
+  const sel = $('fo5-sat-filter');
+  if (!sel) return;
+  try {
+    // /api/satellites/all → tous les satellites, tous statuts confondus
+    const { data = [] } = await fetch('/api/satellites/all').then(r => r.json());
+    const prev = sel.value; // mémorise la sélection courante
+    // On vide et reconstruit (pour rester à jour après un désorbitage)
+    sel.innerHTML = '<option value="tous">Tous les satellites</option>';
+    data.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.ref_satellite;
+      const label = s.statut && s.statut !== 'Opérationnel'
+        ? `${s.nom_satellite} (${s.statut})`
+        : s.nom_satellite;
+      opt.textContent = label;
+      sel.appendChild(opt);
+    });
+    // Restaure la sélection si elle existe encore
+    if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
+  } catch { /* silencieux */ }
+}
+
+/** Badge coloré selon le statut d'une fenêtre */
+function fenetreBadge(statut) {
+  if (!statut) return '—';
+  const map = {
+    'Planifiée':   'badge-planifiee',
+    'En cours':    'badge-encours',
+    'Réalisée':    'badge-realisee',
+    'Échouée':     'badge-echouee',
+  };
+  const cls = map[statut] || 'badge-planifiee';
+  return `<span class="${cls}">${statut}</span>`;
+}
+
+/** Charge et affiche l'historique des fenêtres selon les filtres courants */
+async function loadFenetres() {
+  const tb = $('tb-fenetres');
+  if (!tb) return;
+
+  // Lecture des filtres
+  const satVal    = ($('fo5-sat-filter')    || {}).value || 'tous';
+  const statutVal = ($('fo5-statut-filter') || {}).value || 'tous';
+
+  tb.innerHTML = `<tr class="loading-row"><td colspan="7"><span class="spinner"></span> Chargement…</td></tr>`;
+
+  try {
+    let url = '/api/fenetres';
+    const params = [];
+    if (satVal    && satVal    !== 'tous') params.push(`satellite=${encodeURIComponent(satVal)}`);
+    if (statutVal && statutVal !== 'tous') params.push(`statut=${encodeURIComponent(statutVal)}`);
+    if (params.length) url += '?' + params.join('&');
+
+    const json = await fetch(url).then(r => r.json());
+    const data = json.data || [];
+
+    tb.innerHTML = '';
+
+    // Chips de résumé dans le section-header
+    const chips = $('chips-fenetres');
+    const counts = { 'Planifiée': 0, 'En cours': 0, 'Réalisée': 0, 'Échouée': 0 };
+    data.forEach(f => { if (counts[f.statut] !== undefined) counts[f.statut]++; });
+    if (chips) {
+      chips.innerHTML =
+        `<div class="chip chip-blue"><span class="chip-value">${data.length}</span> fenêtres</div>` +
+        (counts['Planifiée'] > 0 ? `<div class="chip chip-blue"><span class="chip-value">${counts['Planifiée']}</span> planifiées</div>` : '') +
+        (counts['En cours']  > 0 ? `<div class="chip chip-amber"><span class="chip-value">${counts['En cours']}</span> en cours</div>` : '') +
+        (counts['Réalisée']  > 0 ? `<div class="chip chip-green"><span class="chip-value">${counts['Réalisée']}</span> réalisées</div>` : '') +
+        (counts['Échouée']   > 0 ? `<div class="chip chip-red"><span class="chip-value">${counts['Échouée']}</span> échouées</div>` : '');
+    }
+    // Label discret dans la barre de filtre
+    const lbl = $('fo5-count-label');
+    if (lbl) lbl.textContent = `${data.length} résultat${data.length > 1 ? 's' : ''}`;
+
+
+    if (!data.length) {
+      tb.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:32px">
+        <i class="fa-solid fa-satellite-dish" style="opacity:.4;font-size:1.4rem;display:block;margin-bottom:8px"></i>
+        Aucune fenêtre trouvée pour ces critères
+      </td></tr>`;
+      return;
+    }
+
+    data.forEach(f => {
+      const tr = el('tr');
+      const debut = f.datetime_debut
+        ? String(f.datetime_debut).slice(0, 16).replace('T', ' ')
+        : '—';
+      const duree  = f.duree       != null ? `${Number(f.duree).toLocaleString('fr-FR')} s`   : '—';
+      const elev   = f.elevation_max != null ? `${Number(f.elevation_max).toFixed(1)} °`       : '—';
+      const vol    = f.volume_donnees != null && f.volume_donnees > 0
+                      ? `${Number(f.volume_donnees).toFixed(2)} Mo` : '—';
+
+      tr.innerHTML = `
+        <td>${fenetreBadge(f.statut)}</td>
+        <td><strong>${f.nom_satellite || f.ref_satellite || '—'}</strong><br>
+            <code style="color:var(--text-dim);font-size:0.75rem">${f.ref_satellite || ''}</code></td>
+        <td>${f.nom_station || '—'}<br>
+            <span style="color:var(--text-dim);font-size:0.75rem">${f.bande_frequence || ''}</span></td>
+        <td style="white-space:nowrap">${debut}</td>
+        <td class="num">${duree}</td>
+        <td class="num">${elev}</td>
+        <td class="num">${vol}</td>`;
+      tb.appendChild(tr);
+    });
+  } catch (e) {
+    tb.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#f87171;padding:24px">
+      <i class="fa-solid fa-triangle-exclamation"></i> Erreur : ${e.message}
+    </td></tr>`;
+  }
+}
+
 /* ── FO-04 : Alertes instruments ─────────────────────────── */
 async function loadAlertes() {
   try {

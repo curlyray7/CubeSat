@@ -8,6 +8,7 @@
 
   <!-- ── Styles ───────────────────────────────────────────── -->
   <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/css/themes.css">
   <link rel="stylesheet" href="/static/css/login.css">
   <link rel="stylesheet" href="/static/css/layout.css">
   <link rel="stylesheet" href="/static/css/components.css">
@@ -31,25 +32,51 @@
   <canvas id="login-canvas"></canvas>
   <div class="login-card login-card--hud">
 
+    <!-- Ligne de scan animée -->
+    <div class="scan-line"></div>
+
     <div class="login-logo">
-      <div class="orbit-icon"><i class="fa-solid fa-satellite"></i></div>
-      <h1>NanoOrbit</h1>
+      <img src="static/assets/Logo_NanoOrbit.png" alt="NanoOrbit">
     </div>
+
     <p class="login-tagline">CubeSat Earth Observation System</p>
+
+    <div class="login-status">
+      <span class="login-status-dot"></span>
+      Système opérationnel
+    </div>
 
     <div class="login-divider"></div>
 
     <div class="form-group">
-      <label for="login-user">Identifiant</label>
+      <label for="login-user">
+        <i class="fa-solid fa-user-astronaut"></i>
+        Identifiant
+      </label>
       <input type="text" id="login-user" placeholder="ex : analyste_data" autocomplete="username" spellcheck="false">
     </div>
     <div class="form-group">
-      <label for="login-pass">Mot de passe</label>
+      <label for="login-pass">
+        <i class="fa-solid fa-key"></i>
+        Mot de passe
+      </label>
       <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
     </div>
 
-    <button class="btn-primary" onclick="handleLogin()">Se connecter</button>
-    <div id="login-error" class="login-error hidden"></div>
+    <button class="btn-primary" onclick="handleLogin()">
+      <i class="fa-solid fa-right-to-bracket"></i>
+      Accéder au système
+    </button>
+
+    <div id="login-error" class="login-error hidden">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span id="login-error-text"></span>
+    </div>
+
+    <div class="login-footer">
+      <i class="fa-solid fa-shield-halved"></i>
+      Accès restreint — Personnel autorisé uniquement
+    </div>
 
   </div>
 </div>
@@ -69,14 +96,25 @@
       <button class="nav-tab"                         onclick="showScreen('fo-communications',this)">Communications</button>
       <button class="nav-tab"                         onclick="showScreen('fo-missions',      this)">Missions</button>
       <button class="nav-tab"                         onclick="showScreen('fo-alertes',       this)">Alertes</button>
-      <button class="nav-tab back-tab hidden" id="tab-bo-statut"     onclick="showScreen('bo-statut',     this)">Statut</button>
-      <button class="nav-tab back-tab hidden" id="tab-bo-fenetre"    onclick="showScreen('bo-fenetre',    this)">Fenêtre</button>
-      <button class="nav-tab back-tab hidden" id="tab-bo-mission"    onclick="showScreen('bo-mission',    this)">Assignation</button>
-      <button class="nav-tab back-tab hidden" id="tab-bo-desorbiter" onclick="showScreen('bo-desorbiter', this)">Désorbiter</button>
+      <button class="nav-tab"                         onclick="showScreen('fo-fenetres',      this)">Passages</button>
+
+      <!-- Dropdown Administration (back-office) -->
+      <div class="nav-dropdown hidden" id="nav-admin-dropdown">
+        <button class="nav-tab nav-dropdown-trigger" id="tab-bo-root" onclick="toggleAdminMenu(event)">
+          <i class="fa-solid fa-screwdriver-wrench"></i> Administration <i class="fa-solid fa-chevron-down nav-chevron" id="nav-chevron"></i>
+        </button>
+        <div class="nav-dropdown-menu" id="nav-admin-menu">
+          <button class="nav-dropdown-item back-tab hidden" id="tab-bo-statut"     onclick="pickBoScreen('bo-statut',     this)"><i class="fa-solid fa-pen-to-square"></i> Statut satellite</button>
+          <button class="nav-dropdown-item back-tab hidden" id="tab-bo-fenetre"    onclick="pickBoScreen('bo-fenetre',    this)"><i class="fa-solid fa-calendar-days"></i> Planifier passage</button>
+          <button class="nav-dropdown-item back-tab hidden" id="tab-bo-mission"    onclick="pickBoScreen('bo-mission',    this)"><i class="fa-solid fa-link"></i> Assignation mission</button>
+          <button class="nav-dropdown-item back-tab hidden" id="tab-bo-desorbiter" onclick="pickBoScreen('bo-desorbiter', this)"><i class="fa-solid fa-arrow-down-to-bracket"></i> Désorbiter</button>
+        </div>
+      </div>
     </div>
 
     <div class="topnav-right">
       <div class="user-badge">
+        <span class="theme-indicator" id="theme-indicator"></span>
         <span id="nav-username">—</span>
         <span class="user-role" id="nav-role-badge">—</span>
       </div>
@@ -189,6 +227,55 @@
       </div>
     </div>
 
+    <!-- FO-05 : Historique des fenêtres de communication -->
+    <div class="screen" id="screen-fo-fenetres">
+      <div class="section-header">
+        <div>
+          <div class="section-title"><span class="icon"><i class="fa-solid fa-satellite-dish"></i></span> Historique des Passages Sol</div>
+          <div class="section-sub">Source : FENETRE_COM — tous statuts · filtres par satellite et statut</div>
+        </div>
+        <div class="stat-chips" id="chips-fenetres"></div>
+      </div>
+
+      <!-- Filtres -->
+      <div class="fo5-filters glass" id="fo5-filters">
+        <div class="fo5-filter-group">
+          <label><i class="fa-solid fa-satellite"></i> Satellite</label>
+          <select id="fo5-sat-filter" onchange="loadFenetres()">
+            <option value="tous">Tous les satellites</option>
+          </select>
+        </div>
+        <div style="width:1px;height:24px;background:rgba(56,189,248,0.12);flex-shrink:0"></div>
+        <div class="fo5-filter-group">
+          <label><i class="fa-solid fa-tag"></i> Statut</label>
+          <select id="fo5-statut-filter" onchange="loadFenetres()">
+            <option value="tous">Tous les statuts</option>
+            <option value="Planifi&#233;e">Planifi&#233;e</option>
+            <option value="En cours">En cours</option>
+            <option value="R&#233;alis&#233;e">R&#233;alis&#233;e</option>
+            <option value="&#201;chou&#233;e">&#201;chou&#233;e</option>
+          </select>
+        </div>
+        <div style="width:1px;height:24px;background:rgba(56,189,248,0.12);flex-shrink:0"></div>
+        <button class="btn-action btn-blue" style="padding:8px 18px;font-size:0.8rem;letter-spacing:0.05em" onclick="loadFenetres()">
+          <i class="fa-solid fa-rotate"></i>&nbsp; Actualiser
+        </button>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:16px">
+          <span style="font-size:0.72rem;color:var(--text-dim);white-space:nowrap" id="fo5-count-label"></span>
+        </div>
+      </div>
+
+      <div class="table-wrapper glass" style="margin-top:16px">
+        <table>
+          <thead><tr>
+            <th>Statut</th><th>Satellite</th><th>Station</th>
+            <th>Début</th><th>Durée (s)</th><th>Élévation (°)</th><th>Volume (Mo)</th>
+          </tr></thead>
+          <tbody id="tb-fenetres"><tr class="loading-row"><td colspan="7"><span class="spinner"></span> Chargement…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- BO-01 : Statut satellite -->
     <div class="screen" id="screen-bo-statut">
       <div class="section-header"><div>
@@ -201,7 +288,7 @@
     <!-- BO-02 : Fenêtre de communication -->
     <div class="screen" id="screen-bo-fenetre">
       <div class="section-header"><div>
-        <div class="section-title"><span class="icon"><i class="fa-solid fa-calendar-days"></i></span> Planifier une Fenêtre de Communication</div>
+        <div class="section-title"><span class="icon"><i class="fa-solid fa-calendar-days"></i></span> Planifier un Passage Sol</div>
         <div class="section-sub">Profils : operateur_sat, admin_nano</div>
       </div></div>
       <div id="bo-fenetre-content"></div>

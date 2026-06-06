@@ -108,8 +108,9 @@ async function refreshAfterAction(action) {
       loadAlertes();
       break;
     case 'fenetre':
-      // Nouvelle fenêtre → impacte communications
+      // Nouvelle fenêtre → impacte communications + historique FO-05
       loadCommunications();
+      loadFenetres();
       break;
     case 'mission':
       // Nouvelle participation → impacte missions

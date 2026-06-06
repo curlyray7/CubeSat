@@ -1,6 +1,6 @@
 /* ============================================================
    login.css — Page de connexion
-   Esthétique : ESA / NASA Mission Control — sobre, professionnel
+   Esthétique : Mission Control HUD — premium, professionnel
    ============================================================ */
 
 /* ── Canvas Three.js plein écran ─────────────────────────── */
@@ -24,172 +24,328 @@
   padding: 0 10vw;
 }
 
-/* ── Carte ────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   CARTE PRINCIPALE
+   ══════════════════════════════════════════════════════════ */
 .login-card {
   position: relative;
   width: 100%;
-  max-width: 380px;
-  padding: 48px 40px;
-  background: rgba(6, 12, 26, 0.82);
-  backdrop-filter: blur(24px) saturate(1.2);
-  -webkit-backdrop-filter: blur(24px) saturate(1.2);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 4px;
+  max-width: 400px;
+  padding: 48px 40px 44px;
+  background: rgba(5, 10, 22, 0.88);
+  backdrop-filter: blur(32px) saturate(1.4);
+  -webkit-backdrop-filter: blur(32px) saturate(1.4);
+  border: 1px solid rgba(56, 189, 248, 0.18);
+  border-radius: 8px;
   box-shadow:
-    0 24px 80px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    0 0 0 1px rgba(56, 189, 248, 0.06),
+    0 32px 80px rgba(0, 0, 0, 0.7),
+    0 0 60px rgba(14, 165, 233, 0.08),
+    inset 0 1px 0 rgba(56, 189, 248, 0.1);
+  overflow: hidden;
 }
 
-/* Trait supérieur discret */
+/* ── Bande lumineuse supérieure ──────────────────────────── */
 .login-card::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 1px;
+  height: 2px;
   background: linear-gradient(90deg,
     transparent 0%,
-    rgba(148, 163, 184, 0.3) 30%,
-    rgba(148, 163, 184, 0.3) 70%,
+    rgba(56, 189, 248, 0.0) 5%,
+    rgba(56, 189, 248, 0.8) 30%,
+    #38bdf8 50%,
+    rgba(56, 189, 248, 0.8) 70%,
+    rgba(56, 189, 248, 0.0) 95%,
     transparent 100%);
+  animation: scan-top 3s ease-in-out infinite alternate;
+}
+@keyframes scan-top {
+  from { opacity: 0.5; }
+  to   { opacity: 1.0; }
 }
 
-/* Animation d'entrée de la carte */
+/* ── Coin HUD — brackets décoratifs ─────────────────────── */
+.login-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    /* coin haut-gauche */
+    linear-gradient(to right,  rgba(56,189,248,0.5) 1px, transparent 1px) top    left  / 18px 18px no-repeat,
+    linear-gradient(to bottom, rgba(56,189,248,0.5) 1px, transparent 1px) top    left  / 18px 18px no-repeat,
+    /* coin haut-droit */
+    linear-gradient(to left,   rgba(56,189,248,0.5) 1px, transparent 1px) top    right / 18px 18px no-repeat,
+    linear-gradient(to bottom, rgba(56,189,248,0.5) 1px, transparent 1px) top    right / 18px 18px no-repeat,
+    /* coin bas-gauche */
+    linear-gradient(to right,  rgba(56,189,248,0.5) 1px, transparent 1px) bottom left  / 18px 18px no-repeat,
+    linear-gradient(to top,    rgba(56,189,248,0.5) 1px, transparent 1px) bottom left  / 18px 18px no-repeat,
+    /* coin bas-droit */
+    linear-gradient(to left,   rgba(56,189,248,0.5) 1px, transparent 1px) bottom right / 18px 18px no-repeat,
+    linear-gradient(to top,    rgba(56,189,248,0.5) 1px, transparent 1px) bottom right / 18px 18px no-repeat;
+}
+
+/* ── Ligne de scan animée ────────────────────────────────── */
+.login-card--hud .scan-line {
+  position: absolute;
+  left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(56,189,248,0.25), transparent);
+  animation: scan-move 4s linear infinite;
+  pointer-events: none;
+}
+@keyframes scan-move {
+  0%   { top: 0;   opacity: 0; }
+  5%   { opacity: 1; }
+  95%  { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* ── Animation d'entrée de la carte ─────────────────────── */
 .login-card--hud {
-  animation: card-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: card-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-
 @keyframes card-in {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
-/* ── En-tête ─────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   EN-TÊTE & LOGO
+   ══════════════════════════════════════════════════════════ */
 .login-logo {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 6px;
+  justify-content: center;
+  margin-bottom: 8px;
 }
 
-.login-logo .orbit-icon {
-  width: 36px; height: 36px;
+.login-logo img {
+  width: 180px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.35));
+  transition: filter 0.3s;
+}
+.login-logo img:hover {
+  filter: drop-shadow(0 0 20px rgba(56, 189, 248, 0.55));
+}
+
+/* ── Tagline ─────────────────────────────────────────────── */
+.login-tagline {
+  text-align: center;
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 0;
+}
+
+/* ── Status badge ────────────────────────────────────────── */
+.login-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 10px;
+  margin-bottom: 28px;
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.login-status-dot {
+  width: 6px; height: 6px;
   border-radius: 50%;
-  background: rgba(56, 189, 248, 0.08);
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 17px;
+  background: var(--green-sat);
+  box-shadow: 0 0 6px var(--green-sat);
+  animation: blink-dot 2s ease-in-out infinite;
   flex-shrink: 0;
 }
-
-.login-logo h1 {
-  font-family: 'Inter', sans-serif;
-  font-size: 1.35rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  color: var(--white);
-}
-
-.login-tagline {
-  font-size: 0.72rem;
-  color: var(--text-dim);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  margin-bottom: 36px;
+@keyframes blink-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
 }
 
 /* ── Séparateur ──────────────────────────────────────────── */
 .login-divider {
+  position: relative;
   height: 1px;
-  background: rgba(255,255,255,0.06);
+  background: rgba(56, 189, 248, 0.1);
   margin-bottom: 28px;
 }
+.login-divider::before {
+  content: 'AUTHENTIFICATION';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(5, 10, 22, 0.88);
+  padding: 0 12px;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: rgba(56, 189, 248, 0.5);
+  white-space: nowrap;
+}
 
-/* ── Champs ──────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   CHAMPS DE FORMULAIRE
+   ══════════════════════════════════════════════════════════ */
 .form-group {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   text-align: left;
 }
 
 .form-group label {
-  display: block;
-  font-size: 0.72rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  letter-spacing: 0.06em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: rgba(56, 189, 248, 0.6);
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   margin-bottom: 6px;
+}
+.form-group label i {
+  font-size: 0.7rem;
+  opacity: 0.8;
 }
 
 .form-group input {
   width: 100%;
   padding: 11px 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
+  background: rgba(56, 189, 248, 0.03);
+  border: 1px solid rgba(56, 189, 248, 0.14);
+  border-radius: 4px;
   color: var(--white);
   font-family: 'Inter', sans-serif;
   font-size: 0.9rem;
   outline: none;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  caret-color: var(--atmo-400);
 }
 
 .form-group input::placeholder {
-  color: rgba(100, 116, 139, 0.6);
+  color: rgba(100, 116, 139, 0.45);
+  font-size: 0.85rem;
 }
 
 .form-group input:focus {
-  border-color: rgba(148, 163, 184, 0.35);
-  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(56, 189, 248, 0.5);
+  background: rgba(56, 189, 248, 0.06);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1),
+              inset 0 0 12px rgba(56, 189, 248, 0.04);
 }
 
-/* ── Bouton ──────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   BOUTON DE CONNEXION
+   ══════════════════════════════════════════════════════════ */
 .btn-primary {
+  position: relative;
   width: 100%;
-  padding: 12px;
-  margin-top: 8px;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 3px;
+  padding: 13px;
+  margin-top: 10px;
+  overflow: hidden;
+  background: linear-gradient(135deg,
+    rgba(14, 165, 233, 0.75) 0%,
+    rgba(29, 78, 216, 0.75) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 4px;
   color: var(--white);
   font-family: 'Inter', sans-serif;
-  font-size: 0.82rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition: all 0.25s;
+  box-shadow:
+    0 2px 20px rgba(14, 165, 233, 0.25),
+    inset 0 1px 0 rgba(255,255,255,0.08);
 }
 
+/* Reflet animé au survol */
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.5s;
+}
+.btn-primary:hover::before { left: 140%; }
+
 .btn-primary:hover {
-  background: rgba(255, 255, 255, 0.11);
-  border-color: rgba(255, 255, 255, 0.25);
+  background: linear-gradient(135deg,
+    rgba(14, 165, 233, 0.92) 0%,
+    rgba(29, 78, 216, 0.92) 100%);
+  border-color: rgba(56, 189, 248, 0.7);
+  box-shadow:
+    0 4px 28px rgba(14, 165, 233, 0.4),
+    inset 0 1px 0 rgba(255,255,255,0.12);
+  transform: translateY(-1px);
 }
 
 .btn-primary:active {
-  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(0);
+  box-shadow: 0 1px 8px rgba(14, 165, 233, 0.2);
 }
 
-/* ── Erreur ──────────────────────────────────────────────── */
+/* ── Icône dans le bouton ────────────────────────────────── */
+.btn-primary i {
+  margin-right: 8px;
+  font-size: 0.8rem;
+}
+
+/* ══════════════════════════════════════════════════════════
+   MESSAGE D'ERREUR
+   ══════════════════════════════════════════════════════════ */
 .login-error {
   margin-top: 12px;
   padding: 10px 14px;
   background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 3px;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-left: 3px solid rgba(239, 68, 68, 0.7);
+  border-radius: 4px;
   color: #fca5a5;
   font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: shake 0.35s cubic-bezier(.36,.07,.19,.97);
+}
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20%      { transform: translateX(-5px); }
+  40%      { transform: translateX(5px); }
+  60%      { transform: translateX(-3px); }
+  80%      { transform: translateX(3px); }
 }
 
-/* ── Responsive : recentrer sur mobile ───────────────────── */
+/* ── Pied de carte — mention de sécurité ────────────────── */
+.login-footer {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 0.63rem;
+  color: rgba(100, 116, 139, 0.5);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.login-footer i { font-size: 0.6rem; }
+
+/* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 768px) {
   #login-page {
     justify-content: center;
     padding: 24px;
   }
-}
-
-/* Animation d'entrée depuis la droite */
-@keyframes card-in {
-  from { opacity: 0; transform: translateX(30px); }
-  to   { opacity: 1; transform: translateX(0); }
+  .login-card { padding: 36px 28px 32px; }
 }

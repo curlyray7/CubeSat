@@ -14,6 +14,11 @@ import pymysql
 import pymysql.cursors
 import os
 from datetime import date, datetime
+from zoneinfo import ZoneInfo
+
+def now_local() -> datetime:
+    """Heure locale Paris (gère CET/CEST automatiquement), sans tzinfo pour MySQL."""
+    return datetime.now(ZoneInfo("Europe/Paris")).replace(tzinfo=None)
 
 app = FastAPI(title="NanoOrbit API", version="1.0.0")
 
@@ -274,6 +279,83 @@ def get_alertes():
                 s.nom_satellite ASC
             """
         )
+        conn.close()
+        return {"status": "success", "data": rows}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+# FO-05 — Historique des fenêtres de communication
+@app.get("/api/fenetres")
+def get_fenetres(satellite: str = None, statut: str = None):
+    """Historique complet des fenêtres, filtrable par satellite et/ou statut.
+    Auto-expire les fenêtres 'Planifiée' dont la fin (debut + duree) est dépassée.
+    """
+    try:
+        conn = get_conn()
+        with conn.cursor() as cur:
+            # ── Auto-transitions temporelles ──────────────────────────
+            # Les datetimes sont en heure locale Paris ; MySQL tourne UTC.
+            # On passe now_local() (Python) pour une comparaison correcte.
+            t = now_local()
+
+            # 1) Planifiée → En cours  (debut <= now < debut + duree)
+            cur.execute("""
+                UPDATE FENETRE_COM
+                SET statut = 'En cours'
+                WHERE statut = 'Planifiée'
+                  AND datetime_debut <= %s
+                  AND DATE_ADD(datetime_debut, INTERVAL duree SECOND) > %s
+            """, [t, t])
+
+            # 2) En cours → Réalisée  (créneau terminé normalement)
+            #    L'opérateur peut ensuite renseigner le volume via BO-02.
+            #    "Échouée" = incident réel, jamais automatique.
+            cur.execute("""
+                UPDATE FENETRE_COM
+                SET statut = 'Réalisée'
+                WHERE statut = 'En cours'
+                  AND DATE_ADD(datetime_debut, INTERVAL duree SECOND) <= %s
+            """, [t])
+
+            # 3) Planifiée → Réalisée  (fenêtre entièrement passée sans être détectée
+            #    en "En cours", ex. serveur redémarré pendant le créneau)
+            cur.execute("""
+                UPDATE FENETRE_COM
+                SET statut = 'Réalisée'
+                WHERE statut = 'Planifiée'
+                  AND DATE_ADD(datetime_debut, INTERVAL duree SECOND) <= %s
+            """, [t])
+
+            conn.commit()
+
+            sql = """
+                SELECT
+                    f.id_fenetre,
+                    f.datetime_debut,
+                    f.duree,
+                    f.elevation_max,
+                    COALESCE(f.volume_donnees, 0) AS volume_donnees,
+                    f.statut,
+                    s.ref_satellite,
+                    s.nom_satellite,
+                    st.nom_station,
+                    st.bande_frequence
+                FROM FENETRE_COM f
+                JOIN SATELLITE   s  ON f.fk_id_satellite  = s.ref_satellite
+                JOIN STATION_SOL st ON f.fk_code_station  = st.code_station
+                WHERE 1=1
+            """
+            params = []
+            if satellite and satellite != 'tous':
+                sql += " AND f.fk_id_satellite = %s"
+                params.append(satellite)
+            if statut and statut != 'tous':
+                sql += " AND f.statut = %s"
+                params.append(statut)
+            sql += " ORDER BY f.datetime_debut DESC LIMIT 200"
+            cur.execute(sql, params)
+            rows = [serialize(r) for r in cur.fetchall()]
         conn.close()
         return {"status": "success", "data": rows}
     except Exception as e:

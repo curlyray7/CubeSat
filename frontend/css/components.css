@@ -43,7 +43,7 @@ tbody td {
 }
 tbody tr:last-child td { border-bottom: none; }
 
-.num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; color: var(--atmo-300); }
+.num { text-align: center; font-variant-numeric: tabular-nums; font-weight: 500; color: var(--atmo-300); }
 
 .top-active { background: rgba(56,189,248,0.05) !important; }
 .top-active td:first-child { border-left: 2px solid var(--atmo-400); padding-left: 14px; }
@@ -168,6 +168,150 @@ tbody tr:last-child td { border-bottom: none; }
 .modal h3 { font-family: 'Space Grotesk', sans-serif; margin-bottom: 10px; }
 .modal p  { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 24px; line-height: 1.6; }
 .modal-btns { display: flex; gap: 12px; justify-content: center; }
+
+/* ── Dropdown Administration (nav) ──────────────────────── */
+.nav-dropdown {
+  position: relative;
+}
+
+.nav-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.nav-chevron {
+  font-size: 0.6rem;
+  transition: transform 0.2s;
+}
+.nav-dropdown.open .nav-chevron {
+  transform: rotate(180deg);
+}
+
+.nav-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 200px;
+  background: rgba(5, 10, 22, 0.97);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(56,189,248,0.18);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(56,189,248,0.06);
+  padding: 6px;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 100;
+  /* Petite flèche vers le haut */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -5px; left: 50%;
+    transform: translateX(-50%);
+    width: 10px; height: 5px;
+    background: rgba(56,189,248,0.3);
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  }
+}
+.nav-dropdown.open .nav-dropdown-menu {
+  display: flex;
+}
+
+.nav-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.83rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.nav-dropdown-item i { width: 14px; text-align: center; font-size: 0.78rem; }
+.nav-dropdown-item:hover {
+  background: rgba(56,189,248,0.08);
+  color: var(--white);
+}
+.nav-dropdown-item.active {
+  background: rgba(56,189,248,0.12);
+  color: var(--atmo-400);
+}
+/* Désorbiter : danger */
+#tab-bo-desorbiter.nav-dropdown-item:hover {
+  background: rgba(239,68,68,0.08);
+  color: #f87171;
+}
+
+/* ── FO-05 : Filtres historique fenêtres ─────────────────── */
+.fo5-filters {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 14px 20px;
+}
+
+/* Chaque groupe : label inline + select côte à côte */
+.fo5-filter-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.fo5-filter-group label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+.fo5-filter-group select {
+  padding: 8px 32px 8px 12px;
+  appearance: none;
+  -webkit-appearance: none;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2364748b'/%3E%3C/svg%3E")
+    no-repeat right 10px center,
+    rgba(255,255,255,0.04);
+  border: 1px solid rgba(56,189,248,0.25);
+  border-radius: var(--radius-md);
+  color: var(--white);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  outline: none;
+  cursor: pointer;
+  min-width: 180px;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+.fo5-filter-group select:hover  { border-color: rgba(56,189,248,0.45); background-color: rgba(56,189,248,0.06); }
+.fo5-filter-group select:focus  { border-color: var(--atmo-400); box-shadow: 0 0 0 3px rgba(14,165,233,0.15); background-color: rgba(56,189,248,0.06); }
+.fo5-filter-group select option { background: #0d1526; color: var(--white); }
+
+/* Badges statut fenêtre */
+.badge-planifiee { background: rgba(56,189,248,0.12); color: var(--atmo-400);  border: 1px solid rgba(56,189,248,0.35); padding: 3px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; display: inline-block; }
+.badge-encours   { background: rgba(245,158,11,0.12); color: var(--amber-sat); border: 1px solid rgba(245,158,11,0.35); padding: 3px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; display: inline-block; }
+.badge-realisee  { background: rgba(34,197,94,0.12);  color: var(--green-sat); border: 1px solid rgba(34,197,94,0.35);  padding: 3px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; display: inline-block; }
+.badge-echouee   { background: rgba(239,68,68,0.12);  color: #f87171;          border: 1px solid rgba(239,68,68,0.35);  padding: 3px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; display: inline-block; }
 
 /* ── Responsive back-office ──────────────────────────────── */
 @media (max-width: 768px) {

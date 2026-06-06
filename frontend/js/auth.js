@@ -45,8 +45,13 @@ function handleLogin() {
   errEl.classList.add('hidden');
 
   if (!USERS[username] || USERS[username].password !== password) {
-    errEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Identifiant ou mot de passe incorrect.';
+    const span = document.getElementById('login-error-text');
+    if (span) span.textContent = 'Identifiant ou mot de passe incorrect.';
     errEl.classList.remove('hidden');
+    // Redéclencher l'animation shake
+    errEl.style.animation = 'none';
+    errEl.offsetHeight; // reflow
+    errEl.style.animation = '';
     return;
   }
 
@@ -61,6 +66,7 @@ function handleLogin() {
 /* ── Déconnexion ─────────────────────────────────────────── */
 function handleLogout() {
   destroyGlobe();           // globe.js
+  removeTheme();            // nav.js — retire la classe de thème
   SESSION = { user: null, role: null };
   hideEl('app-page');
   showEl('login-page');

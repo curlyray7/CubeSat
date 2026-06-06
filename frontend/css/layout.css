@@ -49,6 +49,11 @@
 .nav-tab.back-tab:hover  { background: rgba(245,158,11,0.08); }
 .nav-tab.back-tab.active { color: var(--amber-sat); background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.25); }
 
+/* Trigger Administration actif = ambré */
+.nav-tab.nav-dropdown-trigger         { color: var(--amber-sat); gap: 7px; }
+.nav-tab.nav-dropdown-trigger:hover   { background: rgba(245,158,11,0.08); }
+.nav-tab.nav-dropdown-trigger.active  { color: var(--amber-sat); background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.25); }
+
 .topnav-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
 
 .user-badge {
