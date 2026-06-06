@@ -32,50 +32,36 @@
   <canvas id="login-canvas"></canvas>
   <div class="login-card login-card--hud">
 
-    <!-- Ligne de scan animée -->
-    <div class="scan-line"></div>
-
     <div class="login-logo">
       <img src="static/assets/Logo_NanoOrbit.png" alt="NanoOrbit">
     </div>
 
     <p class="login-tagline">CubeSat Earth Observation System</p>
 
-    <div class="login-status">
-      <span class="login-status-dot"></span>
-      Système opérationnel
-    </div>
-
     <div class="login-divider"></div>
 
     <div class="form-group">
       <label for="login-user">
-        <i class="fa-solid fa-user-astronaut"></i>
+        <i class="fa-solid fa-user"></i>
         Identifiant
       </label>
       <input type="text" id="login-user" placeholder="ex : analyste_data" autocomplete="username" spellcheck="false">
     </div>
     <div class="form-group">
       <label for="login-pass">
-        <i class="fa-solid fa-key"></i>
+        <i class="fa-solid fa-lock"></i>
         Mot de passe
       </label>
       <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
     </div>
 
     <button class="btn-primary" onclick="handleLogin()">
-      <i class="fa-solid fa-right-to-bracket"></i>
-      Accéder au système
+      Se connecter
     </button>
 
     <div id="login-error" class="login-error hidden">
-      <i class="fa-solid fa-triangle-exclamation"></i>
+      <i class="fa-solid fa-circle-exclamation"></i>
       <span id="login-error-text"></span>
-    </div>
-
-    <div class="login-footer">
-      <i class="fa-solid fa-shield-halved"></i>
-      Accès restreint — Personnel autorisé uniquement
     </div>
 
   </div>
@@ -107,7 +93,7 @@
           <button class="nav-dropdown-item back-tab hidden" id="tab-bo-statut"     onclick="pickBoScreen('bo-statut',     this)"><i class="fa-solid fa-pen-to-square"></i> Statut satellite</button>
           <button class="nav-dropdown-item back-tab hidden" id="tab-bo-fenetre"    onclick="pickBoScreen('bo-fenetre',    this)"><i class="fa-solid fa-calendar-days"></i> Planifier passage</button>
           <button class="nav-dropdown-item back-tab hidden" id="tab-bo-mission"    onclick="pickBoScreen('bo-mission',    this)"><i class="fa-solid fa-link"></i> Assignation mission</button>
-          <button class="nav-dropdown-item back-tab hidden" id="tab-bo-desorbiter" onclick="pickBoScreen('bo-desorbiter', this)"><i class="fa-solid fa-arrow-down-to-bracket"></i> Désorbiter</button>
+          <button class="nav-dropdown-item back-tab hidden" id="tab-bo-desorbiter" onclick="pickBoScreen('bo-desorbiter', this)"><i class="fa-solid fa-circle-radiation"></i> Désorbiter</button>
         </div>
       </div>
     </div>
@@ -128,7 +114,7 @@
     <!-- Panneau gauche : stats + navigation + légende -->
     <div class="globe-left-panel glass" id="globe-sidebar">
       <div class="glp-header">
-        <span class="glp-title"><i class="fa-solid fa-earth-europe"></i> NanoOrbit</span>
+        <span class="glp-title"><i class="fa-solid fa-earth-europe"></i> Panneau de contrôle</span>
         <button class="glp-toggle" onclick="toggleGlobeSidebar()"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="glp-stats">

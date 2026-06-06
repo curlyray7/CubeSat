@@ -72,6 +72,7 @@ function handleLogout() {
   showEl('login-page');
   $('login-pass').value = '';
   $('login-error').classList.add('hidden');
+  if (window.loginScene) window.loginScene.start(); // relance la scène Three.js
 }
 
 /* ── Touche Entrée sur le formulaire de login ────────────── */

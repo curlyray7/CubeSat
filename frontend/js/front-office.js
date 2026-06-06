@@ -120,24 +120,96 @@ async function loadMissions() {
       + (sousDotees > 0 ? `<div class="chip chip-red"><span class="chip-value">${sousDotees}</span> sous-dotée(s)</div>` : '');
 
     data.forEach(m => {
-      const tr     = el('tr');
       const nb_op  = parseInt(m.nb_satellites_operationnels) || 0;
       const nb_par = parseInt(m.nb_satellites_participants)  || 0;
-      if (nb_op < nb_par) tr.classList.add('mission-understaffed');
+      const mId    = m.id_mission || '';
+      const rowId  = `participants-${mId.replace(/[^a-z0-9]/gi, '-')}`;
+
+      // ── Ligne principale de la mission ──
+      const tr = el('tr');
+      tr.className = 'mission-row' + (nb_op < nb_par ? ' mission-understaffed' : '');
+      tr.style.cursor = 'pointer';
+      tr.title = 'Cliquer pour voir les participants';
       tr.innerHTML = `
-        <td><code style="color:var(--atmo-300);font-size:0.85rem">${m.id_mission || '—'}</code></td>
+        <td>
+          <span class="expand-toggle" id="toggle-${rowId}">
+            <i class="fa-solid fa-chevron-right" style="font-size:0.65rem;color:var(--text-dim);transition:transform 0.2s"></i>
+          </span>
+          <code style="color:var(--atmo-300);font-size:0.85rem;margin-left:6px">${mId || '—'}</code>
+        </td>
         <td><strong>${m.nom_mission || '—'}</strong></td>
         <td>${m.zone_geo_cible || m.zone_geographique || '—'}</td>
         <td>${m.date_debut || '—'}</td>
         <td class="num">${nb_par}</td>
         <td class="num">${nb_op}</td>
         <td>${nb_op < nb_par
-          ? '<span style="color:#f87171;font-size:0.8rem;font-weight:600">⚠ Sous-dotée</span>'
-          : '<span style="color:var(--green-sat);font-size:0.8rem">✓ OK</span>'}</td>`;
+          ? '<span style="color:#f87171;font-size:0.8rem;font-weight:600"><i class="fa-solid fa-triangle-exclamation"></i> Sous-dotée</span>'
+          : '<span style="color:var(--green-sat);font-size:0.8rem"><i class="fa-solid fa-circle-check"></i> OK</span>'}</td>`;
+
+      // ── Ligne participants (masquée par défaut) ──
+      const trDetail = el('tr');
+      trDetail.id = rowId;
+      trDetail.style.display = 'none';
+      trDetail.innerHTML = `
+        <td colspan="7" style="padding:0;background:rgba(56,189,248,0.03)">
+          <div class="mission-participants" id="content-${rowId}">
+            <span style="color:var(--text-dim);font-size:0.82rem"><span class="spinner"></span> Chargement…</span>
+          </div>
+        </td>`;
+
+      // Clic sur la ligne → toggle participants
+      tr.addEventListener('click', () => toggleMissionParticipants(mId, rowId));
+
       tb.appendChild(tr);
+      tb.appendChild(trDetail);
     });
   } catch (e) {
     $('tb-missions').innerHTML = `<tr><td colspan="7" style="text-align:center;color:#f87171;padding:24px">Erreur : ${e.message}</td></tr>`;
+  }
+}
+
+/* ── FO-03 : Toggle participants d'une mission ───────────── */
+async function toggleMissionParticipants(mId, rowId) {
+  const detail  = $(rowId);
+  const content = $(`content-${rowId}`);
+  const chevron = document.querySelector(`#toggle-${rowId} i`);
+  const open    = detail.style.display !== 'none';
+
+  if (open) {
+    detail.style.display = 'none';
+    if (chevron) chevron.style.transform = '';
+    return;
+  }
+
+  // Ouvrir
+  detail.style.display = '';
+  if (chevron) chevron.style.transform = 'rotate(90deg)';
+
+  // Charger si pas encore fait
+  if (content.dataset.loaded) return;
+  try {
+    const { data = [] } = await fetch(`/api/missions/${encodeURIComponent(mId)}/participants`).then(r => r.json());
+    content.dataset.loaded = '1';
+
+    if (!data.length) {
+      content.innerHTML = `<span style="color:var(--text-dim);font-size:0.82rem;font-style:italic">Aucun satellite assigné</span>`;
+      return;
+    }
+
+    const pills = data.map(p => {
+      const statusColor = p.statut === 'Opérationnel' ? 'var(--green-sat)'
+                        : p.statut === 'En veille'    ? 'var(--amber-sat)'
+                        : 'var(--text-dim)';
+      return `<div class="participant-pill">
+        <span class="participant-dot" style="background:${statusColor}"></span>
+        <span class="participant-name">${p.nom_satellite}</span>
+        <span class="participant-role">${p.role_satellite || '—'}</span>
+      </div>`;
+    }).join('');
+
+    content.innerHTML = `<div class="participants-list">${pills}</div>`;
+  } catch {
+    content.innerHTML = `<span style="color:#f87171;font-size:0.82rem">Erreur de chargement</span>`;
   }
 }
 

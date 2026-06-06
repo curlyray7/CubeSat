@@ -233,7 +233,8 @@
   });
 
   window.loginScene = {
-    stop() { cancelAnimationFrame(raf); raf = null; renderer.dispose(); },
+    stop()  { cancelAnimationFrame(raf); raf = null; },   // pause RAF, renderer intact
+    start() { if (!raf) animate(); },                      // relance si pas déjà en cours
   };
 
   animate();

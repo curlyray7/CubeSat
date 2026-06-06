@@ -232,6 +232,27 @@ def get_missions():
         return {"status": "error", "message": str(e)}
 
 
+# Participants d'une mission
+@app.get("/api/missions/{id_mission}/participants")
+def get_participants(id_mission: str):
+    try:
+        conn = get_conn()
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT s.ref_satellite, s.nom_satellite, s.statut,
+                       s.format_cubesat, p.role_satellite
+                FROM PARTICIPATION p
+                JOIN SATELLITE s ON p.fk_id_satellite = s.ref_satellite
+                WHERE p.fk_id_mission = %s
+                ORDER BY s.nom_satellite
+            """, [id_mission])
+            rows = [serialize(r) for r in cur.fetchall()]
+        conn.close()
+        return {"status": "success", "data": rows}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
 # Missions actives — pour <select> BO-03
 @app.get("/api/missions/actives")
 def get_missions_actives():

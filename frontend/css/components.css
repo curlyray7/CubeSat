@@ -253,6 +253,52 @@ tbody tr:last-child td { border-bottom: none; }
   color: #f87171;
 }
 
+/* ── FO-03 : Participants de mission ─────────────────────── */
+.mission-row:hover { background: rgba(56,189,248,0.05); }
+
+.mission-participants {
+  padding: 10px 20px 12px 40px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.participants-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.participant-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px 5px 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  transition: background 0.15s;
+}
+.participant-pill:hover { background: rgba(56,189,248,0.07); }
+
+.participant-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.participant-name {
+  font-weight: 600;
+  color: var(--white);
+}
+.participant-role {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  border-left: 1px solid rgba(255,255,255,0.1);
+  padding-left: 7px;
+}
+
 /* ── FO-05 : Filtres historique fenêtres ─────────────────── */
 .fo5-filters {
   display: flex;
