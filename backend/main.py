@@ -131,12 +131,32 @@ def get_globe_data():
 # Tous les satellites — pour les <select> du back-office
 @app.get("/api/satellites/all")
 def get_all_satellites():
+    """Tous les satellites — pour BO-01 (statut) et BO-04 (désorbiter)."""
     try:
         conn = get_conn()
         with conn.cursor() as cur:
             cur.execute("""
                 SELECT ref_satellite, nom_satellite, statut
                 FROM SATELLITE
+                ORDER BY nom_satellite
+            """)
+            rows = [serialize(r) for r in cur.fetchall()]
+        conn.close()
+        return {"status": "success", "data": rows}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@app.get("/api/satellites/operationnels")
+def get_satellites_operationnels():
+    """Satellites opérationnels uniquement — pour BO-02 (fenêtre) et BO-03 (mission)."""
+    try:
+        conn = get_conn()
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT ref_satellite, nom_satellite, statut
+                FROM SATELLITE
+                WHERE statut = 'Opérationnel'
                 ORDER BY nom_satellite
             """)
             rows = [serialize(r) for r in cur.fetchall()]
@@ -250,8 +270,8 @@ def get_alertes():
             JOIN SATELLITE  s  ON s.ref_satellite   = e.fk_id_satellite
             WHERE e.etat_fonctionnement IN ('HS', 'Dégradé')
             ORDER BY
-                CASE e.etat_fonctionnement WHEN 'HS' THEN 0 ELSE 1 END,
-                s.nom_satellite
+                CASE e.etat_fonctionnement WHEN 'HS' THEN 0 ELSE 1 END ASC,
+                s.nom_satellite ASC
             """
         )
         conn.close()
@@ -295,7 +315,7 @@ def check_perm(role: str, perm: str):
     if perm not in ROLE_PERMS.get(role, []):
         raise HTTPException(
             status_code=403,
-            detail=f"Accès refusé : le rôle '{role}' n'est pas autorisé pour cette action."
+            detail={"status": "error", "message": f"Accès refusé : le rôle '{role}' n'est pas autorisé pour cette action."}
         )
 
 

@@ -45,7 +45,7 @@ function handleLogin() {
   errEl.classList.add('hidden');
 
   if (!USERS[username] || USERS[username].password !== password) {
-    errEl.textContent = '⚠️ Identifiant ou mot de passe incorrect.';
+    errEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Identifiant ou mot de passe incorrect.';
     errEl.classList.remove('hidden');
     return;
   }

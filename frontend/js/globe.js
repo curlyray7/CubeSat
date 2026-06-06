@@ -132,7 +132,7 @@ function _buildGlobe(container) {
       const wrapper = document.createElement('div');
       wrapper.className = 'sat-marker';
       wrapper.innerHTML = `
-        <div class="sat-marker-icon" style="color:${d.color}">🛰️</div>
+        <div class="sat-marker-icon" style="color:${d.color}"><i class="fa-solid fa-satellite"></i></div>
         <div class="sat-marker-label">${d.ref}</div>`;
       wrapper.style.cursor = 'pointer';
       wrapper.addEventListener('click', () => showGlobePanelSat(d));
@@ -142,12 +142,8 @@ function _buildGlobe(container) {
   // Arcs de communication
   _buildComLinks();
 
-  // Compteurs stats
-  $('gs-sats').textContent     = Object.keys(SAT_ORBITS).length;
-  $('gs-stations').textContent = STATIONS_DATA.length;
-  fetch('/api/missions').then(r => r.json())
-    .then(j => { $('gs-missions').textContent = (j.data || []).length; })
-    .catch(() => { $('gs-missions').textContent = '—'; });
+  // Compteurs stats (initial)
+  _updateGlobeStats();
 
   globeReady = true;
   _animateSatellites();
@@ -239,7 +235,7 @@ function showGlobePanelSat(d) {
   const statut = o?.statut || (d.color === '#94a3b8' ? 'En veille' : 'Opérationnel');
   $('globe-panel-content').innerHTML = `
     <div class="panel-type sat">Satellite</div>
-    <div class="panel-name">🛰️ ${d.ref}</div>
+    <div class="panel-name"><i class="fa-solid fa-satellite"></i> ${d.ref}</div>
     <div class="panel-rows">
       <div class="panel-row"><span class="lbl">Statut</span>   <span class="val" style="color:${d.color}">${statut}</span></div>
       <div class="panel-row"><span class="lbl">Altitude</span> <span class="val">${o.alt} km</span></div>
@@ -257,7 +253,7 @@ function showGlobePanelSat(d) {
 function showGlobePanelStation(s) {
   $('globe-panel-content').innerHTML = `
     <div class="panel-type station">Station au sol</div>
-    <div class="panel-name">📡 ${s.name}</div>
+    <div class="panel-name"><i class="fa-solid fa-tower-broadcast"></i> ${s.name}</div>
     <div class="panel-rows">
       <div class="panel-row"><span class="lbl">Code</span>     <span class="val">${s.id}</span></div>
       <div class="panel-row"><span class="lbl">Statut</span>   <span class="val" style="color:${s.statut === 'active' ? '#22c55e' : '#f59e0b'}">${s.statut === 'active' ? 'Active' : 'Maintenance'}</span></div>
@@ -302,8 +298,47 @@ function _buildSidebar() {
     </div>`).join('');
 
   body.innerHTML = `
-    <div class="sidebar-section-title">🛰️ Satellites</div>${satItems}
-    <div class="sidebar-section-title" style="margin-top:10px">📡 Stations au sol</div>${staItems}`;
+    <div class="sidebar-section-title"><i class="fa-solid fa-satellite"></i> Satellites</div>${satItems}
+    <div class="sidebar-section-title" style="margin-top:10px"><i class="fa-solid fa-tower-broadcast"></i> Stations au sol</div>${staItems}`;
+}
+
+/* ── Mise à jour des stats du panneau gauche ─────────────── */
+function _updateGlobeStats() {
+  $('gs-sats').textContent     = Object.keys(SAT_ORBITS).length;
+  $('gs-stations').textContent = STATIONS_DATA.length;
+  fetch('/api/missions').then(r => r.json())
+    .then(j => { $('gs-missions').textContent = (j.data || []).length; })
+    .catch(() => { $('gs-missions').textContent = '—'; });
+}
+
+/**
+ * Recharge les données BDD et met à jour en direct :
+ *  – stats du panneau gauche (satellites, stations, missions)
+ *  – liste sidebar (satellites + stations avec leur statut actuel)
+ *  – couleurs des marqueurs satellites sur le globe
+ * Appelé depuis back-office.js après chaque action réussie.
+ */
+async function refreshGlobe() {
+  if (!globeReady || !globeInstance) return;
+
+  // 1. Re-fetch les données depuis la BDD
+  await loadGlobeData();
+
+  // 2. Mettre à jour les compteurs stats
+  _updateGlobeStats();
+
+  // 3. Reconstruire la liste sidebar
+  _buildSidebar();
+
+  // 4. Mettre à jour les couleurs des marqueurs sur le globe
+  //    (sans interrompre l'animation : on modifie SAT_ORBITS, la RAF prend en compte
+  //     les nouvelles couleurs au prochain frame)
+  // Rien à faire explicitement : _animateSatellites() lit SAT_ORBITS à chaque frame,
+  // qui vient d'être recalculé par loadGlobeData(). Les nouvelles couleurs s'affichent
+  // immédiatement au prochain rendu.
+
+  // 5. Mettre à jour les arcs de communication (stations → satellites)
+  if (typeof _buildComLinks === 'function') _buildComLinks();
 }
 
 function toggleGlobeSidebar() {

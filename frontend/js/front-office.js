@@ -86,7 +86,7 @@ async function loadCommunications() {
       const nbSta    = row.nb_stations_contactees ?? '—';
 
       tr.innerHTML = `
-        <td><strong>${sat}</strong>${isTop ? ' <span style="color:var(--atmo-400);font-size:0.75rem">★ Top</span>' : ''}</td>
+        <td><strong>${sat}</strong>${isTop ? ' <span style="color:var(--atmo-400);font-size:0.75rem"><i class="fa-solid fa-star"></i> Top</span>' : ''}</td>
         <td class="num">${nbFen}</td>
         <td class="num">${volTot}</td>
         <td class="num">${volMoy}</td>
@@ -154,7 +154,7 @@ async function loadAlertes() {
     else                 counter.classList.add('hidden');
 
     if (!data.length) {
-      tb.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--green-sat);padding:32px">✅ Aucune alerte — tous les instruments nominaux</td></tr>`;
+      tb.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--green-sat);padding:32px"><i class="fa-solid fa-circle-check"></i> Aucune alerte — tous les instruments nominaux</td></tr>`;
       return;
     }
 
@@ -163,8 +163,8 @@ async function loadAlertes() {
       const prio = (a.priorite || '').toUpperCase();
       tr.innerHTML = `
         <td>${prio === 'CRITIQUE'
-          ? '<span class="badge-critique">🔴 CRITIQUE</span>'
-          : '<span class="badge-surveillance">🟡 SURVEILLANCE</span>'}</td>
+          ? '<span class="badge-critique"><i class="fa-solid fa-circle"></i> CRITIQUE</span>'
+          : '<span class="badge-surveillance"><i class="fa-solid fa-circle"></i> SURVEILLANCE</span>'}</td>
         <td><strong>${a.ref_instrument || a.nom_instrument || '—'}</strong></td>
         <td>${a.type_instrument || '—'}</td>
         <td style="color:${prio === 'CRITIQUE' ? '#f87171' : 'var(--amber-sat)'}">${a.etat_fonctionnement || '—'}</td>

@@ -23,7 +23,7 @@ const hideEl = (id) => $(id)?.classList.add('hidden');
  * @param {string} text
  */
 function showMsg(msgEl, type, text) {
-  msgEl.textContent = text;
-  msgEl.className   = `msg msg-${type} show`;
+  msgEl.innerHTML = text;   // innerHTML pour rendre les icônes FA
+  msgEl.className = `msg msg-${type} show`;
   setTimeout(() => msgEl.classList.remove('show'), 5000);
 }
